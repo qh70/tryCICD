@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8"></meta>
+        <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1" >
+        <script type="text/javascript">
+            // let cost=document.getElementById("cost")
+            // let morning=document.getElementById("morning")
+            // let afternoon=document.getElementById("afternoon")
+            // if(morning.checked==="checked"){
+            //     cost.innerHTML="新台幣 2000 元"
+            // }else if(afternoon.checked)
+            let pathname=location.pathname
+            let attraction_data
+            
+            // 檢查登入狀態
+            function init(){
+                let req=new XMLHttpRequest();
+                req.open("get","/api/user");
+                req.onload=function(){
+                    // console.log(JSON.parse(this.responseText)["data"])
+                    if(JSON.parse(this.responseText)["data"]!=null){
+                        let item2=document.getElementById("item2");
+                        item2.style.display="none";
+                        let logout=document.getElementById("logout");
+                        logout.style.display="block";
+                    }
+                    else{
+                        let item2=document.getElementById("item2");
+                        item2.style.display="block";
+                        let logout=document.getElementById("logout");
+                        logout.style.display="none";
+                    }
+                };
+                req.send();
+            }
+
+            // 載入資訊
+            function getData(){
+                let req=new XMLHttpRequest();
+                req.open("get","/api/attraction/"+pathname.split("/").pop()+"")
+                req.onload=function(){
+                    attraction_data=JSON.parse(this.responseText);
+
+                    // console.log(attraction_data);
+                    // console.log(attraction_data["data"]["images"].length);
+
+                    // pics
+                    let sliderContent=document.getElementById("sliderContent");
+                    for(let i=0;i<attraction_data["data"]["images"].length;i++){
+                        let pics=document.createElement("img");
+                        pics.className="slider--item";
+                        pics.src=attraction_data["data"]["images"][i];
+                        sliderContent.appendChild(pics)
+
+                        let dots_section=document.getElementById("dots_section")
+                        if(i===0){
+                            let dots=document.createElement("img");
+                            dots.className="dots"
+                            dots.src="/static/circle_current.png"
+                            dots_section.appendChild(dots)
+                        }
+                        else{
+                            let dots=document.createElement("img");
+                            dots.className="dots"
+                            dots.src="/static/circle_Ncurrent.png"
+                            dots_section.appendChild(dots)
+                        }
+                    }
+                    
+                    // name
+                    let name=document.getElementById("name");
+                    let data_name=document.createTextNode(attraction_data["data"]["name"]);
+                    name.appendChild(data_name);
+                    // category at mrt
+                    let category_at_mrt=document.getElementById("category_at_mrt")
+                    let category_at_mrt_createNode=document.createTextNode(attraction_data["data"]["category"]+" at "+attraction_data["data"]["mrt"])
+                    category_at_mrt.appendChild(category_at_mrt_createNode)
+
+                    // 3rd layer
+                    // let three=document.getElementById("three")
+                    //description
+                    let description=document.getElementById("description")
+                    description.innerHTML=attraction_data["data"]["description"]
+                    // address
+                    let address_data=document.getElementById("address_data")
+                    address_data.innerHTML=attraction_data["data"]["address"]
+                    // transport
+                    let transport_data=document.getElementById("transport_data")
+                    transport_data.innerHTML=attraction_data["data"]["transport"]
+                }
+                req.send();
+            }
+
+            // 輪播效果
+            let current = 0;
+            const handleNext = async () => {
+                const items = document.querySelectorAll(".slider--item");
+                items[current].style.animation = "hideRight 1.5s forwards";
+                items[current >= items.length - 1 ? 0 : current + 1].style.animation = "showRight 1.5s forwards";
+                if (current < items.length - 1) {
+                    current++;
+                } else {
+                    current = 0;
+                }
+                black_dot(current);
+            };
+
+            const handlePrev = async () => {
+                const items = document.querySelectorAll(".slider--item");
+                items[current].style.animation = "hideLeft 1.5s forwards";
+                items[current > 0 ? current - 1 : attraction_data["data"]["images"].length-1].style.animation = "showLeft 1.5s forwards";
+                if (current > 0) {
+                    current--;
+                } else {
+                    current = items.length - 1;
+                }
+                black_dot(current);
+            };
+
+            function black_dot(c){
+                for (let i = 0; i < dots_section.children.length; i++) {
+                    if (i === c) {
+                        dots_section.children[i].src = "/static/circle_current.png";
+                    } 
+                    else {
+                        dots_section.children[i].src = "/static/circle_Ncurrent.png";
+                    }
+                }
+            }
+
+            // 導覽費用
+            function morning_fun(){
+                let morning=document.getElementById("morning");
+                let cost=document.getElementById("cost");
+                if(morning.value=="morning"){
+                    cost.innerHTML="新台幣 2000 元"
+                }
+            }
+            function afternoon_fun(){
+                let afternoon=document.getElementById("afternoon");
+                let cost=document.getElementById("cost");
+                if(afternoon.value=="afternoon"){
+                    cost.innerHTML="新台幣 2500 元"
+                }
+            }
+            // ============================================================
+
+            // 按下預訂行程按鈕
+            function booking_btn(){
+                let item2=document.getElementById("item2");
+                if(item2.style.display=="block"){
+                    console.log("y")
+                    show_login_area();
+                }
+                else{window.location="/booking"}
+            }
+            
+            // 按下登入鍵
+            function show_login_area(){
+                let overlay_login=document.getElementById("overlay_login");
+                overlay_login.style.display="block";
+            }
+            function close_login(){
+                let overlay_login=document.getElementById("overlay_login");
+                overlay_login.style.display="none";
+            }
+            // 按下註冊鍵
+            function show_signup_area(){
+                let overlay_signup=document.getElementById("overlay_signup");
+                overlay_signup.style.display="block";
+                let signup_failed=document.getElementById("signup_failed");
+                signup_failed.style.display="none";
+                let signup_succeed=document.getElementById("signup_succeed");
+                signup_succeed.style.display="none";
+            }
+            function close_signup(){
+                let overlay_signup=document.getElementById("overlay_signup");
+                overlay_signup.style.display="none";
+            }
+            // 還沒有帳戶？點此註冊
+            function signup_after_popup(){
+                let overlay_login=document.getElementById("overlay_login");
+                overlay_login.style.display="none"
+                let overlay_signup=document.getElementById("overlay_signup");
+                overlay_signup.style.display="block";
+            }
+            // 已經有帳戶了？點此登入
+            function login_after_popup(){
+                let overlay_signup=document.getElementById("overlay_signup");
+                overlay_signup.style.display="none";
+                let overlay_login=document.getElementById("overlay_login");
+                overlay_login.style.display="block";
+            }
+
+            // 登入會員
+            function login(){
+                let req=new XMLHttpRequest();
+                req.open("PATCH","/api/user");
+                req.setRequestHeader("Content-type", "application/json");
+                req.onload=function(){
+                    // 登入成功
+                    if(JSON.parse(this.responseText)["ok"]==true){
+                        window.location="/attraction/"+pathname.split("/").pop()+"";
+                        // let overlay_login=document.getElementById("overlay_login");
+                        // overlay_login.style.display="none";
+                        // let item2=document.getElementById("item2");
+                        // item2.style.display="none";
+                        // let logout=document.getElementById("logout");
+                        // logout.style.display="block";
+                    }
+                    // 密碼錯誤
+                    else if(JSON.parse(this.responseText)["message"]=="密碼錯誤"){
+                        let login_failed=document.getElementById("login_failed");
+                        login_failed.innerHTML="密碼錯誤";
+                        login_failed.style.display="block";
+                    }
+                    // 此Email 未註冊帳號
+                    else if(JSON.parse(this.responseText)["message"]=="此Email 未註冊帳號"){
+                        let login_failed=document.getElementById("login_failed");
+                        login_failed.innerHTML="此Email 未註冊帳號";
+                        login_failed.style.display="block";
+                    }
+                }
+                let email_login=document.getElementById("email_login");
+                let password_login=document.getElementById("password_login");
+                req.send(
+                    JSON.stringify({
+                        "email_login":email_login.value,
+                        "password_login":password_login.value
+                    })
+                );
+            }
+
+            // 註冊會員
+            function signup(){
+                let req=new XMLHttpRequest();
+                req.open("POST","/api/user");
+                req.setRequestHeader("Content-type", "application/json");
+                req.onload=function(){
+                    if(JSON.parse(this.responseText)["error"]===true){
+                        console.log(this.responseText);
+                        let signup_succeed=document.getElementById("signup_succeed");
+                        signup_succeed.style.display="none";
+                        let signup_failed=document.getElementById("signup_failed");
+                        signup_failed.style.display="block";
+                    }else if(JSON.parse(this.responseText)["ok"]===true){
+                        console.log(this.responseText);
+                        let signup_failed=document.getElementById("signup_failed");
+                        signup_failed.style.display="none";
+                        let signup_succeed=document.getElementById("signup_succeed");
+                        signup_succeed.style.display="block";
+                    }
+
+                }
+                let name_signup=document.getElementById("name_signup");
+                let email_signup=document.getElementById("email_signup");
+                let password_signup=document.getElementById("password_signup");
+                req.send(
+                    JSON.stringify({
+                        "name_signup":name_signup.value,
+                        "email_signup":email_signup.value,
+                        "password_signup":password_signup.value
+                    })
+                )
+            }
+            // 登出會員
+            function logout(){
+                let req=new XMLHttpRequest();
+                req.open("DELETE","/api/user")
+                req.onload=function(){
+                    window.location="/attraction/"+pathname.split("/").pop()+"";
+                    // let item2=document.getElementById("item2");
+                    // item2.style.display="block";
+                    // let logout=document.getElementById("logout");
+                    // logout.style.display="none";
+                }
+                req.send();
+            }
+        </script>
+        
+        <style type="text/css">    
+            /* noto sans tc 載入 */
+            @import url(//fonts.googleapis.com/earlyaccess/notosanstc.css);
+            body{font-family: 'Noto Sans TC';}
+
+            /* 頂層============================================================ */
+            .empty_fixed_bar{height: 54px;margin: 0px;position: fixed;top: 0;left: 0;right: 0;background-color: white;border-bottom: #e6e4e4 solid 1px;}
+            .navigation_bar{width: 1200px;height: 54px;background-color: white;
+                margin-left: auto;margin-right: auto;
+                display: flex;align-items: center;
+            }  
+            .taipei_oneday_tourist{font-weight: bold;font-size: 20px;margin-left: 10px;color:rgb(34, 177, 177);cursor: pointer;}
+            .item1{width:100px;text-align: center;font-size: 15px;margin-left:auto;margin-right: -10px;color: #666666;cursor: pointer;}
+            .item2{width:100px;text-align: center;font-size: 15px;float:right;margin-left: -10px;margin-right: 10px;color: #666666;cursor: pointer;}
+            .logout{width:100px;text-align: center;font-size: 15px;margin-left: -10px;margin-right: 10px;padding: 0px;color: #666666;display: none;cursor: pointer;}
+            
+            .empty_bar{height: 54px;margin: 0px;}
+
+            /* 第二層============================================================ */
+            .second_bar_div{width: 1200px;height: 400px;margin-top: 40px;display: flex;margin-left: auto;margin-right: auto;}
+            /* 照片 */
+            .slider{width: 540px;height: 400px;margin-left: 15px;position: relative;object-fit: cover;}
+                    .slider--content img {
+                        width: 100%;
+                        height: 100%;
+                        max-width: 100%;
+                        max-height: 100%; 
+                        position: absolute;
+                        text-align: center;
+                    }
+                    .slider--item:not(:first-child) {
+                    opacity: 0; 
+                    }
+                /* dots_section */
+                .dots_section{margin-top: 350px;left: 50%;z-index: 9998;position: absolute;transform: translateX(-50%);text-align: center;}
+                    .dots{margin: 2px;}
+                /* .slider--controls */
+                .slider--controls > a {
+                    position: absolute;
+                    top: 50%;
+                    transform: translateY(-50%);
+                    text-decoration: none;
+                    display: inline-block;
+                    padding: 20px;
+                    transition: 0.4s;}
+                .slider--controls--left {
+                    left: 0;
+                    border-top-right-radius: 10px;
+                    border-bottom-right-radius: 10px;
+                    opacity: 60%;
+                    }
+                .slider--controls--right {
+                    right: 0;
+                    border-top-left-radius: 10px;
+                    border-bottom-left-radius: 10px;
+                    opacity: 60%;
+                    }
+            
+            #sliderContent{object-fit: cover;}
+            /* 第二層 照片以外 */
+            .second-2{width: 600px;height: 400px;margin-left: 30px;margin-right: 15px;}
+            .name{width: 600px;height: 33px;margin-top: 0px;color: #666666;font-size: 24px;font-weight: 700,bold;}
+            .category_at_mrt{width: 600px;height: 22px;margin-top: 15px;margin-bottom: 20px;}
+            .second-2-3{width: 600px;height: 302px;margin-top: 20px;padding-top: 5px;background-color: #E8E8E8;box-sizing: border-box;border-radius: 5px;}
+            /* 第二層 灰色區域============================================================ */
+            .second-2-3-1{width: 95%;height: 22px;font-size: 16px;font-weight: bold;color: #666666;margin-top: 15px;margin-left: 20px;}
+            .second-2-3-2{width: 95%;height: 24px;font-size: 16px;font-weight: 400;color: #666666;margin-top: 15px;margin-left: 20px;}
+            .second-2-3-3{width: 95%;height: 35px;margin-top: 15px;font-weight: bold;margin-left: 20px;display: flex;color: #666666;}
+            .second-2-3-3-1{margin-top: 9px;margin-right: 5px;line-height: 13px;}
+            #date{padding-left: 10px;border: white;}
+            .second-2-3-3-2{width: 193px;height: 35px;background-color: white;box-sizing: border-box;}
+            .second-2-3-4{width: 95%;height: 22px;margin-top: 15px;font-weight: bold;margin-left: 20px;display: flex;color: #666666;line-height: 18px;}
+            .second-2-3-5{width: 95%;height: 22px;margin-top: 15px;font-weight: bold;margin-left: 20px;color: #666666;}
+                .cost{font-size: 16px;font-weight: 400;}
+            .second-2-3-6{height: 36px;display: flex;}
+            .second-2-3-6-1{width: 154px;height: 36px;line-height: 34px;margin-top: 25px;margin-left: 20px;background-color: #448899;text-align: center;border-radius: 5px;font-size: 16px;color: white;text-align: center;}
+            .plz_date_time{height: 36px;line-height: 33px;margin-top: 25px;margin-left: 15px;font-size: 16px;display: none;color: red;}
+
+            .hr{width: 1200px;border: 1px solid #f1f0f0;margin-top: 37px;margin-left: auto;margin-right: auto;}
+            /* 第三層============================================================ */
+            .three{width: 1200px;margin-top: 40px;margin-left: auto;margin-right: auto;color:#666666;}
+            .description{margin: 10px;font-size: 16px;font-weight: 400;}
+            .address{height: 32px;margin-top: 20px;margin-left: 10px;margin-right: 10px;font-size: 16px;font-weight:bold;}
+            .address_data{height: 24px;margin-top: 0px;margin-left: 10px;margin-right: 10px;font-size: 16px;font-weight: 400;}
+            .transport{height: 32px;margin-top: 20px;margin-left: 10px;margin-right: 10px;font-size: 16px;font-weight:bold;}
+            .transport_data{height: auto;margin-top: 0px;margin-left: 10px;margin-right: 10px;font-size: 16px;font-weight: 400;}
+
+            /* 底層 */
+            .copyright{height:104px;background-color: #757575;text-align: center;line-height: 104px;color: white;font-size: 13.3px;margin-top: 40px}
+
+            /* radio */
+            label.radio {
+                /* 保證佈局特性保持一致 */
+                margin: 3px 3px 0px 5px;
+                display: inline-block;
+                box-sizing: border-box;
+
+                width: 12px;
+                height: 12px;
+            }
+            .radio__appearance{
+                display: block; /* 設定為block則不受vertical-align影響，從而不會意外影響到.radio的linebox高度 */
+                position: relative;
+                background-color: white;
+                box-shadow: 0 0 0 1px white; /* box-shadow不像border那樣會影響盒子的框高 */
+                border-radius: 50%;
+                height: 90%;
+                width: 90%;
+                text-align: center;
+            }
+            label.radio [type=radio] + .radio__appearance::before{ /* 點了裡的圓框 */
+                content: "";
+                display: block;
+                border-radius: 50%;
+                width: 85%;
+                height: 85%;
+
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+
+                transition: background .3s;
+            }
+            label.radio [type=radio]:checked + .radio__appearance::before{
+                background: #448899;
+            }
+            label.radio input {
+               display: none;
+            }
+            /* ============================================================ */
+            @keyframes showRight {
+                0% {
+                    left: 0; /* 100% */
+                    opacity: 0;
+                }
+                100% {
+                    left: 0;
+                    opacity: 1;
+                }
+            }
+
+            @keyframes hideRight {
+                0% {
+                    left: 0;
+                    opacity: 1;
+                }
+                100% {
+                    left: 0; /* 100% */
+                    opacity: 0;
+                }
+            }
+
+            @keyframes showLeft {
+                0% {
+                    left: 0; /* 100% */
+                    opacity: 0;
+                }
+                100% {
+                    left: 0;
+                    opacity: 1;
+                }
+            }
+            @keyframes hideLeft {
+                0% {
+                    left: 0;
+                    opacity: 1;
+                }
+                99%{
+                    left: 0; /* 100% */
+                    opacity: 0;
+                }
+                100% {
+                    left: 0;
+                    opacity: 0;
+                }
+            }
+
+            /* 登入彈出視窗============================================================ */  
+            .overlay_login{width: 100%;height: 100%;display: none;position: fixed;z-index: 9999;top: 0;left: 0;background: rgb(0,0,0,0.7);}
+            .login_block{
+                width: 340px;
+                position: fixed;top: 80px;left: 50%;transform: translate(-170px,0px);
+                border-radius: 6px;background-color: white;                
+            }
+            .login_top{width: 340px;height: 10px;
+                background: linear-gradient(270deg, #337788 0%, #66AABB 100%);
+                border-top-left-radius: 6px;border-top-right-radius: 6px;
+            }
+            .login_title_area{width: 310px;height: 27px;margin-top: 15px;margin-left: auto;margin-right: auto;display: flex;}
+            .login_title{margin-left: auto;margin-right: auto;font-size: 24px;font-weight: bold;text-align: center;}
+            .icon_close{width: 16px;height: 16px;top: 0px;right: 0px;cursor: pointer;}
+            .type_email{width: 310px;height: 47px;margin-top: 15px;margin-left: 15px;box-sizing: border-box;padding: 0px;padding-left: 10px;}
+            .type_password{width: 310px;height: 47px;margin-top: 10px;margin-left: 15px;box-sizing: border-box;padding: 0px;padding-left: 10px;}
+            .login_btn{width: 310px;height: 47px;margin-top: 10px;margin-left: 15px;font-size: 16px;text-align: center;border-radius: 5px;line-height: 47px;box-sizing: border-box;padding: 0px;background-color: #448899;color: white;cursor: pointer;}
+            #login_failed{width: 310px;height: 47px;margin-top: 10px;margin-left: 15px;font-size: 16px;text-align: center;line-height: 47px;box-sizing: border-box;padding: 0px;color: red;}
+            .not_yet_account{width: 310px;height: 22px;margin-top: 10px;margin-bottom: 15px;margin-left: 15px;font-size: 16px;text-align: center;cursor: pointer;}
+
+            /* 註冊彈出視窗 */
+            .overlay_signup{width: 100%;height: 100%;display: none;position: fixed;z-index: 9999;top: 0;left: 0;background: rgb(0,0,0,0.7);}
+            .signup_block{
+                width: 340px;
+                position: fixed;top: 80px;left: 50%;transform: translate(-170px,0px);
+                border-radius: 6px;background-color: white;                
+            }
+            .signup_top{width: 340px;height: 10px;
+                background: linear-gradient(270deg, #337788 0%, #66AABB 100%);
+                border-top-left-radius: 6px;border-top-right-radius: 6px;
+            }
+            .signup_title_area{width: 310px;height: 27px;margin-top: 15px;margin-left: auto;margin-right: auto;display: flex;}
+            .signup_title{margin-left: auto;margin-right: auto;font-size: 24px;font-weight: bold;text-align: center;}
+            .icon_close{width: 16px;height: 16px;top: 0px;right: 0px;cursor: pointer;}
+            .signup_type_name{width: 310px;height: 47px;margin-top: 15px;margin-left: 15px;box-sizing: border-box;padding: 0px;padding-left: 10px;}
+            .signup_type_email{width: 310px;height: 47px;margin-top: 10px;margin-left: 15px;box-sizing: border-box;padding: 0px;padding-left: 10px;}
+            .signup_type_password{width: 310px;height: 47px;margin-top: 10px;margin-left: 15px;box-sizing: border-box;padding: 0px;padding-left: 10px;}
+            .signup_btn{width: 310px;height: 47px;margin-top: 10px;margin-left: 15px;font-size: 16px;text-align: center;border-radius: 5px;line-height: 47px;box-sizing: border-box;padding: 0px;background-color: #448899;color: white;cursor: pointer;}
+            #signup_failed{width: 310px;height: 47px;margin-top: 10px;margin-left: 15px;font-size: 16px;text-align: center;line-height: 47px;box-sizing: border-box;padding: 0px;color: red;}
+            #signup_succeed{width: 310px;height: 47px;margin-top: 10px;margin-left: 15px;font-size: 16px;text-align: center;line-height: 47px;box-sizing: border-box;padding: 0px;color: green;}
+            .yet_account{width: 310px;height: 22px;margin-top: 10px;margin-bottom: 15px;margin-left: 15px;font-size: 16px;text-align: center;cursor: pointer;}
+
+            @media (max-width:1200px){
+                .navigation_bar{width:100%;height: 54px;}
+                .taipei_oneday_tourist{width: 150px; height: 34px;font-size: 30px;}
+                .item1{width: 64px;height: 14px;margin-right: 10px;padding: 15px;font-size: 16px;}
+                .item2{width: 71px;height: 14px;margin-right: 10px;font-size: 16px}
+                .logout{width: 71px;height: 14px;margin-right: 10px;font-size: 16px}
+                /* 第二層============================================================ */
+                .second_bar_div{width: 100%;height: 760px;margin-top: 40px;margin-left: 0px;margin-right: 0px;padding-right: 0px;margin-bottom: 40px; display: block;}
+
+                /* 照片 */
+                .slider{width: 100%;height: 350px;margin-left: 0px;margin-right: 0px;padding: 0px;position: relative;object-fit: cover;}
+                    .slider--content{width: 100%;}
+                        .slider--content img{width: 100%;margin-left: 0px;margin-right: 0px;object-fit: cover;}
+                .dots_section{margin-top: 300px;left: 50%;z-index: 9998;position: absolute;transform: translateX(-50%);}
+                /* 第二層 照片以外 */
+                .second-2{width: 100%;height: 390px;margin-top: 20px;margin-left: 0px;margin-right: 0px;}
+                .name{width: 100%;height: 33px;margin-top: 0px;margin-left: 10px;color: #666666;font-size: 24px;font-weight: 700,bold;}
+                .category_at_mrt{width: 100%;height: 22px;margin-top: 15px;margin-left: 10px;margin-bottom: 20px;}
+                .second-2-3{width: 100%;height: 340px;margin-top: 20px;margin-bottom: 40px;margin-left: 10px;margin-right: 10px;padding-top: 5px;background-color: #E8E8E8;box-sizing: border-box;border-radius: 5px;}
+                /* 第二層 灰色區域============================================================ */
+                .second-2-3-1{height: 22px;font-size: 16px;font-weight: bold;color: #666666;margin-top: 15px;margin-left: 20px;}
+                .second-2-3-2{width: 90%;height: auto;font-size: 16px;font-weight: 400;color: #666666;margin-top: 15px;margin-bottom: 15px;padding-right: 20px;word-break: break-all; word-wrap: break-word;}
+                .second-2-3-3{height: 35px;margin-top: 15px;font-weight: bold;margin-left: 20px;display: flex;color: #666666;}
+                .second-2-3-3-1{margin-top: 9px;margin-right: 5px;line-height: 13px;}
+                .second-2-3-3-2{width: 193px;height: 35px;background-color: white;box-sizing: border-box;}
+                .second-2-3-4{height: 22px;margin-top: 15px;font-weight: bold;margin-left: 20px;display: flex;color: #666666;line-height: 18px;}
+                .second-2-3-5{height: 22px;margin-top: 15px;font-weight: bold;margin-left: 20px;color: #666666;}
+                    .cost{font-size: 16px;font-weight: 400;}
+                /* .second-2-3-6{width: 154px;height: 36px;margin-top: 25px;margin-left: 20px;background-color: #448899;line-height: 36px;text-align: center;border-radius: 5px;}
+                .second-2-3-6-1{font-size: 16px;color: white;text-align: center;} */
+                .second-2-3-6{height: 36px;display: flex;}
+                .second-2-3-6-1{width: 154px;height: 36px;line-height: 34px;margin-top: 25px;margin-left: 20px;background-color: #448899;text-align: center;border-radius: 5px;font-size: 16px;color: white;text-align: center;}
+                .plz_date_time{height: 36px;line-height: 33px;margin-top: 25px;margin-left: 15px;font-size: 16px;display: none;color: red;}
+     
+                .hr{width: 100%;margin-top: 80px;margin-left: 10px;margin-right: 10px;}
+                /* 第三層============================================================ */
+                .three{width: 100%;margin-top: 40px;margin-left: 0px;color:#666666}
+                .description{width: 100%;;margin: 10px;font-size: 16px;font-weight: 400;word-break: break-all; word-wrap: break-word;}
+                .address{margin-top: 20px;margin-left: 10px;margin-right: 10px;font-size: 16px;font-weight:bold;}
+                .address_data{margin-top: 0px;margin-left: 10px;margin-right: 10px;font-size: 16px;font-weight: 400;}
+                .transport{height: 32px;margin-top: 20px;margin-left: 10px;margin-right: 10px;font-size: 16px;font-weight:bold;}
+                .transport_data{width: 100%;margin: 10px;margin-top: 0px;font-size: 16px;font-weight: 400;}
+
+                /* 底層 */
+                .copyright{height:104px;background-color: #757575;text-align: center;line-height: 104px;color: white;font-size: 13.3px;margin-top: 40px;}
+            }
+        </style>
+
+    </head>
+    <body style="margin: 0px;" onload="init();getData()">
+        <!-- 頂層============================================================ -->
+        <div class="empty_fixed_bar" style="z-index: 9999;">
+            <div class="navigation_bar">
+                <div class="taipei_oneday_tourist" onclick="location.href='/'">台北一日遊</div>
+                <span class="item1" id="item1" onclick="booking_btn()">預定行程</span>
+                <span class="item2" id="item2">
+                    <span onclick="show_login_area()">登入</span>/<span onclick="show_signup_area()">註冊</span>
+                </span>
+                <span class="logout" id="logout" onclick="logout()">登出系統</span>
+            </div> 
+        </div> 
+        <div class="empty_bar"></div>  
+        <!-- 第二層============================================================ -->
+        <div class="second_bar_div">
+            <!-- 照片 -->
+            <div class="slider">
+                <div class="slider--content" id="sliderContent">
+                    <!-- <img class="slider--item" src="https://www.travel.taipei/d_upload_ttn/sceneadmin/pic/11000848.jpg" alt/>
+                    <img class="slider--item" src="https://www.travel.taipei/d_upload_ttn/sceneadmin/pic/11002891.jpg" alt/>
+                    <img class="slider--item" src="https://www.travel.taipei/d_upload_ttn/sceneadmin/image/A0/B0/C0/D315/E70/F65/1e0951fb-069f-4b13-b5ca-2d09df1d3d90.JPG" alt/> -->
+                </div>
+                <div class="dots_section" id="dots_section"></div>
+                <div class="slider--controls">
+                    <a href="#" class="slider--controls--left" onclick="handlePrev()"><img src="/static/btn_leftArrow.png"></a>
+                    <a href="#" class="slider--controls--right" onclick="handleNext()"><img src="/static/btn_rightArrow.png"></a>
+                </div>
+            </div>
+            <!-- 第二層 照片以外 -->
+            <div class="second-2">
+                <div class="name" id="name"></div>
+                <div class="category_at_mrt" id="category_at_mrt"></div>
+                <div class="second-2-3">
+                    <div class="second-2-3-1">訂購導覽行程</div>
+                    <div class="second-2-3-2"><p>以此景點為中心的一日行程，帶您探索城市角落故事</p></div>
+                    <div class="second-2-3-3">
+                        <h4 class="second-2-3-3-1">選擇日期：</h4>
+                        <input type="date" id="date">
+                    </div>
+                    <div class="second-2-3-4">選擇時間：
+                        <label class="radio" for="morning" style="font-weight: 400;line-height: 18px;"><input type="radio" id="morning" name="MorA" onclick="morning_fun()" value="morning"><i class="radio__appearance"></i></label><span style="font-weight: 400;line-height: 18px;">上半天</span>
+                        <label class="radio" for="afternoon" style="font-weight: 400;line-height: 18px;"><input type="radio" id="afternoon" name="MorA" onclick="afternoon_fun()" value="afternoon"><i class="radio__appearance"></i></label><span style="font-weight: 400;line-height: 18px;">下半天</span>
+                    </div>
+                    <div class="second-2-3-5">導覽費用：<span class="cost" id="cost"> （請選擇時間） </span></div>
+                    <div class="second-2-3-6">
+                        <div class="second-2-3-6-1" onclick="start_book()">開始預訂行程</div><div class="plz_date_time"></div>
+                    </div>
+                </div>
+            </div>
+            
+        </div>
+        <script type="text/javascript">
+            function start_book(){
+                let item2=document.getElementById("item2");
+                let plz_date_time=document.querySelector(".plz_date_time")
+                let cost=document.getElementById("cost")
+                if(item2.style.display=="block"){
+                    show_login_area();
+                }else{
+                    let date=document.getElementById("date");
+                    console.log(date.value)
+                    if(date.value==""){
+                        plz_date_time.style.display="block";
+                        plz_date_time.innerHTML="請選擇日期";
+                    }else if(cost.innerHTML==" （請選擇時間） "){
+                        plz_date_time.style.display="block";
+                        plz_date_time.innerHTML="請選擇時間"
+                    }else{
+                        plz_date_time.style.display="none";
+
+                        let req=new XMLHttpRequest;
+                        req.open("POST","/api/booking");
+                        req.setRequestHeader("Content-type", "application/json")
+                        req.onload=function(){
+                            console.log(JSON.parse(this.responseText));
+                            if(JSON.parse(this.responseText)["ok"]==true){
+                                window.location="/booking"
+                            }else{
+                                plz_date_time.style.display="block";
+                                plz_date_time.innerHTML="錯誤的資料或伺服器內部錯誤";
+                            }
+                        }
+                        // 資料處理
+                        let time;
+                        let morning=document.querySelector("#morning");
+                        if(morning.value="morning"){
+                            time="上半天";
+                        }else{
+                            time="下半天"
+                        }
+                        let price;
+                        if(cost.innerHTML=="新台幣 2000 元"){
+                            price="2000";
+                        }else{
+                            price="2500";
+                        }
+                        req.send(
+                            JSON.stringify({
+                                "attractionId":pathname.split("/").pop(),
+                                "date": date.value,
+                                "time": time,
+                                "price": price
+                            })
+                        );
+                    }
+                    // if(date.)
+                    // let cost=document.querySelector(".cost");
+                    // console.log(cost.innerHTML);
+                }
+            }
+        </script>
+        <hr class="hr">
+        <!-- 第三層============================================================ -->
+        <div class="three" id="three">
+            <div class="description" id="description"></div>
+            <div class="address">景點地址：</div>
+            <div class="address_data" id="address_data"></div>
+            <div class="transport">交通方式：</div>
+            <div class="transport_data" id="transport_data"></div>
+        </div>
+        <!-- footer============================================================ -->
+        <div class="copyright">
+            COPYRIGHT © 2021 台北一日遊
+        </div>
+
+        <!-- 登入彈出視窗============================================================ -->
+        <div class="overlay_login" id="overlay_login">
+            <div class="login_block" id="login_block">
+                <div class="login_top"></div>
+                <div class="login_title_area">
+                    <div class="login_title">登入會員帳號</div>
+                    <img class="icon_close" src="../static/icon_close.png" onclick="close_login()">
+                </div>
+                <input class="type_email" id="email_login" type="email" placeholder="輸入電子信箱">
+                <input class="type_password" id="password_login" type="password" placeholder="輸入密碼">
+                <div class="login_btn" onclick="login()">登入帳戶</div>
+
+                <div id="login_failed" style="display:none"></div>
+
+                <div class="not_yet_account" onclick="signup_after_popup()">還沒有帳戶？點此註冊</div>
+            </div>
+        </div>
+        <!-- 註冊彈出視窗 -->
+        <div class="overlay_signup" id="overlay_signup">
+            <div class="signup_block" id="signup_block">
+                <div class="signup_top"></div>
+                <div class="signup_title_area">
+                    <div class="signup_title">註冊會員帳號</div>
+                    <img class="icon_close" src="../static/icon_close.png" onclick="close_signup()">
+                </div>
+                <input class="signup_type_name" type="text" id="name_signup" placeholder="輸入姓名">
+                <input class="signup_type_email" type="email" id="email_signup" placeholder="輸入電子信箱">
+                <input class="signup_type_password" type="password" id="password_signup" placeholder="輸入密碼">
+                <div class="signup_btn" onclick="signup()">註冊新帳戶</div>
+
+                <div id="signup_failed" style="display:none">Email 已經註冊帳戶</div>
+                <div id="signup_succeed" style="display:none">註冊成功</div>
+                
+                <div class="yet_account" onclick = "login_after_popup()">已經有帳戶了？點此登入</div>
+            </div>
+        </div>
+    </body>
+</html>

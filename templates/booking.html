@@ -1,0 +1,845 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8"></meta>
+        <meta name="viewport" content="width=device-width initial-scale=1 maximum-scale=1"/>
+        <title>台北市景點列表</title>
+        <script type="text/javascript">
+            let booking_data;
+
+            // 讓所有 hr 標籤消失的 function
+            function hr_change(){
+                let hrs=document.getElementsByTagName("hr");
+                for (let i=0;i<hrs.length;i++){
+                    hrs[i].style.display="none";
+                }
+            }
+            
+            // 檢查登入狀態
+            function init(){
+                let req=new XMLHttpRequest();
+                req.open("get","/api/user");
+                req.onload=function(){
+                    // console.log(JSON.parse(this.responseText)["data"])
+                    if(JSON.parse(this.responseText)["data"]!=null){
+                        let item2=document.getElementById("item2");
+                        item2.style.display="none";
+                        let logout=document.getElementById("logout");
+                        logout.style.display="block";
+                        let member_name=document.getElementById("member_name");
+                        member_name.innerHTML=JSON.parse(this.responseText)["data"]["name"];  
+                    }
+                    else{
+                        window.location="/"
+                    }
+                };
+                req.send();
+                
+                // 到 /api/booking取資料 
+                let req2=new XMLHttpRequest();
+                req2.open("get","/api/booking");
+                req2.onload=function(){
+                    booking_data=JSON.parse(this.responseText);
+                    // 若沒有預訂行程
+                    if(booking_data["data"]==null){
+                        let second_2=document.querySelector(".second-2");
+                        let three=document.querySelector(".three");
+                        let four=document.querySelector(".four");
+                        let five=document.querySelector(".five");
+                        // let hr=document.getElementsByTagName("hr")
+                        let nobook_nologin=document.querySelector(".nobook_nologin")
+                        document.querySelector(".schedule").style.display = "block";
+                        second_2.style.display="none";
+                        three.style.display="none";
+                        four.style.display="none";
+                        five.style.display="none";
+                        // 讓所有 hr 標籤消失
+                        hr_change();
+
+                        nobook_nologin.style.display="block";
+                        nobook_nologin.innerHTML="目前沒有任何的預訂行程";
+
+                        let cHeight = document.documentElement.clientHeight;
+                        document.body.style.height="100vh";
+                    }else if(booking_data["error"]==true){
+                        // 若沒有登入
+                        let second_2=document.querySelector(".second-2");
+                        let three=document.querySelector(".three");
+                        let four=document.querySelector(".four");
+                        let five=document.querySelector(".five");
+                        // let hr=document.querySelectorAll("hr")
+                        let nobook_nologin=document.querySelector(".nobook_nologin")
+                        second_2.style.display="none";
+                        three.style.display="none";
+                        four.style.display="none";
+                        five.style.display="none";
+
+                        // 讓所有 hr 標籤消失
+                        hr_change();
+
+                        nobook_nologin.style.display="block";
+                        nobook_nologin.innerHTML="尚未登入";
+                        document.body.style.height="100vh";
+                    }else{
+                        // 若有預訂行程
+                        let pic=document.querySelector(".pic");
+                        let name=document.querySelector("#name");
+                        let date=document.querySelector("#date");
+                        let time=document.querySelector("#time");
+                        let price=document.querySelector("#price");
+                        let address=document.querySelector("#address");
+                        // console.log(booking_data["data"]["attraction"]["image"].split(" ")[0])
+                        pic.src=booking_data["data"]["attraction"]["image"].split(" ")[0];
+                        name.innerHTML=booking_data["data"]["attraction"]["name"];
+                        date.innerHTML=booking_data["data"]["date"];
+                        time.innerHTML=booking_data["data"]["time"];
+                        price.innerHTML=booking_data["data"]["price"];
+                        address.innerHTML=booking_data["data"]["attraction"]["address"];
+                        document.getElementById("final_price").innerHTML=booking_data["data"]["price"];
+                        
+                        document.querySelector(".schedule").style.display = "block";
+                        document.querySelector(".three").style.display = "block";
+                        document.querySelector(".four").style.display = "block";
+                        document.querySelector(".five").style.display = "block";
+                        let hrs=document.getElementsByTagName("hr");
+                        for (let i=0;i<hrs.length;i++){
+                            hrs[i].style.display="block";
+                        }
+                    }
+                }
+                req2.send();
+            }
+
+            // 按下預訂行程按鈕
+            function booking_btn(){
+                let item2=document.getElementById("item2");
+                if(item2.style.display=="block"){
+                    console.log("y")
+                    show_login_area();
+                }
+                else{window.location="/booking"}
+            }
+            
+            // 按下登入鍵
+            function show_login_area(){
+                let overlay_login=document.getElementById("overlay_login");
+                overlay_login.style.display="block";
+            }
+            function close_login(){
+                let overlay_login=document.getElementById("overlay_login");
+                overlay_login.style.display="none";
+            }
+            // 按下註冊鍵
+            function show_signup_area(){
+                let overlay_signup=document.getElementById("overlay_signup");
+                overlay_signup.style.display="block";
+                let signup_failed=document.getElementById("signup_failed");
+                signup_failed.style.display="none";
+                let signup_succeed=document.getElementById("signup_succeed");
+                signup_succeed.style.display="none";
+            }
+            function close_signup(){
+                let overlay_signup=document.getElementById("overlay_signup");
+                overlay_signup.style.display="none";
+            }
+            // 還沒有帳戶？點此註冊
+            function signup_after_popup(){
+                let overlay_login=document.getElementById("overlay_login");
+                overlay_login.style.display="none"
+                let overlay_signup=document.getElementById("overlay_signup");
+                overlay_signup.style.display="block";
+            }
+            // 已經有帳戶了？點此登入
+            function login_after_popup(){
+                let overlay_signup=document.getElementById("overlay_signup");
+                overlay_signup.style.display="none";
+                let overlay_login=document.getElementById("overlay_login");
+                overlay_login.style.display="block";
+            }
+
+            // 登入會員
+            function login(){
+                let req=new XMLHttpRequest();
+                req.open("PATCH","/api/user");
+                req.setRequestHeader("Content-type", "application/json");
+                req.onload=function(){
+                    // 登入成功
+                    if(JSON.parse(this.responseText)["ok"]==true){
+                        window.location="/booking";
+                    }
+                    // 密碼錯誤
+                    else if(JSON.parse(this.responseText)["message"]=="密碼錯誤"){
+                        let login_failed=document.getElementById("login_failed");
+                        login_failed.innerHTML="密碼錯誤";
+                        login_failed.style.display="block";
+                    }
+                    // 此Email 未註冊帳號
+                    else if(JSON.parse(this.responseText)["message"]=="此Email 未註冊帳號"){
+                        let login_failed=document.getElementById("login_failed");
+                        login_failed.innerHTML="此Email 未註冊帳號";
+                        login_failed.style.display="block";
+                    }
+                }
+                let email_login=document.getElementById("email_login");
+                let password_login=document.getElementById("password_login");
+                req.send(
+                    JSON.stringify({
+                        "email_login":email_login.value,
+                        "password_login":password_login.value
+                    })
+                );
+            }
+
+            // 註冊會員
+            function signup(){
+                let req=new XMLHttpRequest();
+                req.open("POST","/api/user");
+                req.setRequestHeader("Content-type", "application/json");
+                req.onload=function(){
+                    if(JSON.parse(this.responseText)["error"]===true){
+                        console.log(this.responseText);
+                        let signup_succeed=document.getElementById("signup_succeed");
+                        signup_succeed.style.display="none";
+                        let signup_failed=document.getElementById("signup_failed");
+                        signup_failed.style.display="block";
+                    }else if(JSON.parse(this.responseText)["ok"]===true){
+                        console.log(this.responseText);
+                        let signup_failed=document.getElementById("signup_failed");
+                        signup_failed.style.display="none";
+                        let signup_succeed=document.getElementById("signup_succeed");
+                        signup_succeed.style.display="block";
+                    }
+
+                }
+                let name_signup=document.getElementById("name_signup");
+                let email_signup=document.getElementById("email_signup");
+                let password_signup=document.getElementById("password_signup");
+                req.send(
+                    JSON.stringify({
+                        "name_signup":name_signup.value,
+                        "email_signup":email_signup.value,
+                        "password_signup":password_signup.value
+                    })
+                )
+            }
+            // 登出會員
+            function logout(){
+                let req=new XMLHttpRequest();
+                req.open("DELETE","/api/user")
+                req.onload=function(){
+                    window.location="/booking";
+                }
+                req.send();
+            }
+        </script>
+
+        <style type="text/css">    
+            /* noto sans tc 載入 */
+            @import url(//fonts.googleapis.com/earlyaccess/notosanstc.css);
+            body{font-family: 'Noto Sans TC';}
+
+            /* 初始化 */ 
+            *{box-sizing: border-box;}
+            ol, ul, menu{list-style: none;}
+
+            /* 頂層============================================================ */
+            .empty_fixed_bar{height: 54px;margin: 0px;position: fixed;top: 0;left: 0;right: 0;background-color: white;border-bottom: #e6e4e4 solid 1px;}
+            .navigation_bar{width: 1200px;height: 54px;background-color: white;
+                margin-left: auto;margin-right: auto;
+                display: flex;align-items: center;
+                border-bottom: #e6e4e4 solid 1px;
+            }  
+            .taipei_oneday_tourist{font-weight: bold;font-size: 20px;margin-left: 10px;color:rgb(34, 177, 177);cursor: pointer;}
+            .item1{width:100px;text-align: center;font-size: 15px;margin-left:auto;margin-right: -10px;color: #666666;cursor: pointer;}
+            .item2{width:100px;text-align: center;font-size: 15px;float:right;margin-left: -10px;margin-right: 10px;color: #666666;cursor: pointer;}
+            .logout{width:100px;text-align: center;font-size: 15px;margin-left: -10px;margin-right: 10px;padding: 0px;color: #666666;display: none;cursor: pointer;}
+            
+            .empty_bar{height: 54px;margin: 0px;}
+            /* 第二層============================================================ */
+            .schedule{width: 1000px;margin-top: 40px;margin-left: auto;margin-right: auto;display: none;}
+            .welcome{font-size: 19px;font-weight: bold;}
+            .nobook_nologin{margin-top: 50px;font-size: 16px;display: none;}
+            .second-2{margin-top: 35px;margin-left: 8px;display: flex;}
+            .pic{width: 266px;height: 200px;object-fit: cover;}
+            .second-2-3{margin-left: 22px;}
+            .taipei_oneday{height: 14px;font-weight: bold;color:#448899}
+            .date{height: 14px;margin-top: 30px;font-size: bold;}
+            .time{height: 14px;margin-top: 20px;font-size: bold;}
+            .price{height: 14px;margin-top: 20px;font-size: bold;}
+            .address{height: 14px;margin-top: 20px;font-size: bold;}
+            .icon_delete{width: 30px;height: 30px;margin-top: 0px;margin-bottom: auto;margin-left: auto;margin-right: 0px;}
+            /* 第三層============================================================ */
+            .three{width: 980px;margin-top: 40px;margin-left: auto;margin-right: auto;display: none;}
+            .contact{font-size: 19px;font-weight: bold;}
+            .name_info{margin-top: 24px;margin-left: 0px;font-size: 16px;}
+            .email_info{margin-top: 24px;margin-left: 0px;font-size: 16px;}
+            .phone_info{margin-top: 24px;margin-left: 0px;font-size: 16px;}
+            .plz_check{margin-top: 20px;font-size: 16px;font-weight: bold;}
+            /* 第四層============================================================ */
+            .four{width: 980px;margin-top: 40px;margin-left: auto;margin-right: auto;display: none;}
+            .cc_info{font-size: 19px;font-weight: bold;}
+            .four>div{margin-top: 24px;margin-left: 0px;}
+            .tpfield {
+                height: 38px;
+                width: 250px;
+                border: 1px solid gray;
+                margin: 5px 0;
+                padding: 5px;
+            }
+            #warming{margin-left: 0px;color: red;font-size: 16px;font-weight: bold;display: none;}
+            /* 第五層============================================================ */
+            .five{width: 980px;margin-top: 40px;margin-left: auto;margin-right: auto;text-align: right;display: none;}
+            .check_pay{width: 173px;height: 36px;margin-top: 25px;margin-left: auto;margin-right: 0px;background-color: #448899;color: white;text-align: center;line-height: 36px;}
+            
+            /* 底層 */
+            .copyright{height: 100%;background-color: #757575;text-align: center;line-height: 104px;color: white;font-size: 13.3px;margin-top: 40px;margin-bottom: 0px;}
+            /* 登入彈出視窗============================================================ */  
+            .overlay_login{width: 100%;height: 100%;display: none;position: fixed;z-index: 9999;top: 0;left: 0;background: rgb(0,0,0,0.7);}
+            .login_block{
+                width: 340px;
+                position: fixed;top: 80px;left: 50%;transform: translate(-170px,0px);
+                border-radius: 6px;background-color: white;                
+            }
+            .login_top{width: 340px;height: 10px;
+                background: linear-gradient(270deg, #337788 0%, #66AABB 100%);
+                border-top-left-radius: 6px;border-top-right-radius: 6px;
+            }
+            .login_title_area{width: 310px;height: 27px;margin-top: 15px;margin-left: auto;margin-right: auto;display: flex;}
+            .login_title{margin-left: auto;margin-right: auto;font-size: 24px;font-weight: bold;text-align: center;}
+            .icon_close{width: 16px;height: 16px;top: 0px;right: 0px;cursor: pointer;}
+            .type_email{width: 310px;height: 47px;margin-top: 15px;margin-left: 15px;box-sizing: border-box;padding: 0px;padding-left: 10px;}
+            .type_password{width: 310px;height: 47px;margin-top: 10px;margin-left: 15px;box-sizing: border-box;padding: 0px;padding-left: 10px;}
+            .login_btn{width: 310px;height: 47px;margin-top: 10px;margin-left: 15px;font-size: 16px;text-align: center;border-radius: 5px;line-height: 47px;box-sizing: border-box;padding: 0px;background-color: #448899;color: white;}
+            #login_failed{width: 310px;height: 47px;margin-top: 10px;margin-left: 15px;font-size: 16px;text-align: center;line-height: 47px;box-sizing: border-box;padding: 0px;color: red;}
+            .not_yet_account{width: 310px;height: 22px;margin-top: 10px;margin-bottom: 15px;margin-left: 15px;font-size: 16px;text-align: center;}
+
+            /* 註冊彈出視窗 */
+            .overlay_signup{width: 100%;height: 100%;display: none;position: fixed;z-index: 9999;top: 0;left: 0;background: rgb(0,0,0,0.7);}
+            .signup_block{
+                width: 340px;
+                position: fixed;top: 80px;left: 50%;transform: translate(-170px,0px);
+                border-radius: 6px;background-color: white;                
+            }
+            .signup_top{width: 340px;height: 10px;
+                background: linear-gradient(270deg, #337788 0%, #66AABB 100%);
+                border-top-left-radius: 6px;border-top-right-radius: 6px;
+            }
+            .signup_title_area{width: 310px;height: 27px;margin-top: 15px;margin-left: auto;margin-right: auto;display: flex;}
+            .signup_title{margin-left: auto;margin-right: auto;font-size: 24px;font-weight: bold;text-align: center;}
+            .icon_close{width: 16px;height: 16px;top: 0px;right: 0px;cursor: pointer;}
+            .signup_type_name{width: 310px;height: 47px;margin-top: 15px;margin-left: 15px;box-sizing: border-box;padding: 0px;padding-left: 10px;}
+            .signup_type_email{width: 310px;height: 47px;margin-top: 10px;margin-left: 15px;box-sizing: border-box;padding: 0px;padding-left: 10px;}
+            .signup_type_password{width: 310px;height: 47px;margin-top: 10px;margin-left: 15px;box-sizing: border-box;padding: 0px;padding-left: 10px;}
+            .signup_btn{width: 310px;height: 47px;margin-top: 10px;margin-left: 15px;font-size: 16px;text-align: center;border-radius: 5px;line-height: 47px;box-sizing: border-box;padding: 0px;background-color: #448899;color: white;cursor: pointer;}
+            #signup_failed{width: 310px;height: 47px;margin-top: 10px;margin-left: 15px;font-size: 16px;text-align: center;line-height: 47px;box-sizing: border-box;padding: 0px;color: red;}
+            #signup_succeed{width: 310px;height: 47px;margin-top: 10px;margin-left: 15px;font-size: 16px;text-align: center;line-height: 47px;box-sizing: border-box;padding: 0px;color: green;}
+            .yet_account{width: 310px;height: 22px;margin-top: 10px;margin-bottom: 15px;margin-left: 15px;font-size: 16px;text-align: center;cursor: pointer;}
+            hr{width: 1200px;border: 1px solid #f1f0f0;display: none;}
+            input{width: 200px;height: 38px;padding-left: 10px;}
+            
+            @media (max-width:1200px){
+                /* 頂層============================================================ */
+                .empty_fixed_bar{width: 100%;}
+                .navigation_bar{width: 100%}
+                /* 第二層============================================================ */
+                .schedule{width: 95%;}
+                /* 第三層============================================================ */
+                .three{width: 95%}
+                /* 第四層============================================================ */
+                .four{width: 95%}
+                /* 第五層============================================================ */
+                .five{width: 95%}
+
+                hr{width: 95%;}
+            }
+            @media (max-width:600px){
+                /* 頂層============================================================ */
+                .empty_fixed_bar{width: 100%;}
+                .navigation_bar{width: 100%}
+                /* 第二層============================================================ */
+                .schedule{width: 100%}
+                .welcome{margin-left: 10px;}
+                .second-2{margin-top: 0px;margin-left: 0px;display: block;text-align: center;}
+                .pic{width: 95%;object-fit: cover;margin-top: 25px;margin-left: auto;margin-right: auto;}
+                .second-2-3{text-align: left;}
+                .icon_delete{margin-top:15px;margin-left: 85%;}
+                /* 第三層============================================================ */
+                .three{width: 95%}
+                /* 第四層============================================================ */
+                .four{width: 95%}
+                /* 第五層============================================================ */
+                .five{width: 95%}
+
+                hr{width: 95%;}
+            }
+        </style>
+    </head>
+    <body style="height: 100%;margin: 0px;" onload="init()">
+        <!-- 頂層============================================================ -->
+        <div class="empty_fixed_bar">
+            <div class="navigation_bar">
+                <div class="taipei_oneday_tourist" onclick="location.href='/'">台北一日遊</div>
+                <span class="item1" id="item1" onclick="booking_btn()">預定行程</span>
+                <span class="item2" id="item2">
+                    <span onclick="show_login_area()">登入</span>/<span onclick="show_signup_area()">註冊</span>
+                </span>
+                <span class="logout" id="logout" onclick="logout()">登出系統</span>
+            </div> 
+        </div>  
+        <div class="empty_bar"></div>
+        <!-- 第二層============================================================ -->
+        <div class="schedule">
+            <div class="welcome">您好，<span id="member_name"></span>，待預訂的行程如下：</div>
+            <div class="nobook_nologin"></div>
+            <div class="second-2">
+                <img class="pic">
+                <div class="second-2-3">
+                    <div class="taipei_oneday">台北一日遊：<span id="name"></span></div>
+                    <div class="date">日期：<span id="date" style="font-weight: 300;"></span></div>
+                    <div class="time">時間：<span id="time" style="font-weight: 300;"></span></div>
+                    <div class="price">費用：<span id="price" style="font-weight: 300;"></span></div>
+                    <div class="address">地點：<span id="address" style="font-weight: 300;"></span></div>
+                </div>
+                <img class="icon_delete" src="../static/icon_delete.png" onclick="delete_pic()">
+            </div>
+        </div>
+        <script type="text/javascript">
+            function delete_pic(){
+                let req=new XMLHttpRequest();
+                req.open("delete","/api/booking");
+                req.onload=function(){
+                    if(JSON.parse(this.responseText)["ok"]==true){
+                        window.location="/booking";
+                    }
+                }
+                req.send();
+            }
+        </script>
+
+        <hr style="margin-top: 40px;">
+        <!-- 第三層============================================================ -->
+        <div class="three">
+            <h3 class="contact">您的聯絡資訊</h3>
+            <div class="name_info">聯絡姓名：<input id="name_info"></div>
+            <div class="email_info">連絡信箱：<input id="email_info"></div>
+            <div class="phone_info">手機號碼：<input id="phone_info"></div>
+            <h4 class="plz_check">請保持手機暢通，準時到達，導覽人員將用手機與您聯繫，務必留下正確的聯絡方式。</h4>
+        </div>
+
+        <hr style="margin-top: 40px;">
+        <!-- 第四層 TapPay fields============================================== -->            
+        <div class="four" id="cardview-container">
+            <h3 class="cc_info">信用卡付款資訊</h3>
+            <div style="display:flex"><span style="line-height:48px">卡片號碼：</span><div class="tpfield" id="card-number"></div></div>
+            <div style="display:flex;"><span style="line-height:48px">過期時間：</span><div class="tpfield" id="card-expiration-date"></div></div>
+            <div style="display:flex"><span style="line-height:48px">驗證密碼：</span><div class="tpfield" id="card-ccv"></div></div>
+            <div id="warming">請確認您的聯絡資訊與信用卡資訊正確</div>
+        </div>
+        
+        <hr style="margin-top: 40px;">
+        <!-- 第五層============================================================ -->
+        <div class="five">
+            <div>總價：<span id="final_price"></span></div>
+            <div class="check_pay" id="submit-button" onclick="onClick()" disabled>確認訂購並付款</div>
+        </div>
+        <!-- <button id="submit-button" onclick="onClick()">submit</button> -->
+        <script src="https://js.tappaysdk.com/tpdirect/v5.8.0"></script>
+        <script>
+            let warming=document.getElementById("warming");
+
+            TPDirect.setupSDK(123978, "app_6vZtNGTsC0AMtSJnbGtZFsJTp0nx5AWk9iD3eIWmZP0HXVL0DNpzvAobxlcq", 'sandbox')
+            let fields = {
+                number: {
+                    // css selector
+                    element: '#card-number',
+                    placeholder: '**** **** **** ****'
+                },
+                expirationDate: {
+                    // DOM object
+                    element: document.getElementById('card-expiration-date'),
+                    placeholder: 'MM / YY'
+                },
+                ccv: {
+                    element: '#card-ccv',
+                    placeholder: 'ccv'
+                }
+            }
+            TPDirect.card.setup({fields,
+                styles: {
+                    // Style all elements
+                    'input': {
+                        'color': 'gray'
+                    },
+                    // Styling ccv field
+                    'input.ccv': {
+                        // 'font-size': '16px'
+                    },
+                    // Styling expiration-date field
+                    'input.expiration-date': {
+                        // 'font-size': '16px'
+                    },
+                    // Styling card-number field
+                    'input.card-number': {
+                        // 'font-size': '16px'
+                    },
+                    // style focus state
+                    ':focus': {
+                        // 'color': 'black'
+                    },
+                    // style valid state
+                    '.valid': {
+                        'color': 'green'
+                    },
+                    // style invalid state
+                    '.invalid': {
+                        'color': 'red'
+                    },
+                    // Media queries
+                    // Note that these apply to the iframe, not the root window.
+                    '@media screen and (max-width: 400px)': {
+                        'input': {
+                            'color': 'orange'
+                        }
+                    }
+                }
+            })
+            const cardViewContainer = document.querySelector("#cardview-container");
+            const message = document.querySelector(".message");
+            var submitButton = document.getElementById("submit-button");
+
+            TPDirect.card.onUpdate(function (update) {
+                // --> you can call TPDirect.card.getPrime()
+                if (update.canGetPrime) {
+                    // Enable submit Button to get prime.
+                    submitButton.removeAttribute('disabled')
+                } else {
+                    // Disable submit Button to get prime.
+                    submitButton.setAttribute('disabled', true);
+                }
+            })
+
+            TPDirect.card.getTappayFieldsStatus();
+
+            let orderData;
+            function onClick() {
+                const inputName = document.querySelector("#name_info").value;
+                const inputEmail = document.querySelector("#email_info").value;
+                const inputTelephone = document.querySelector("#phone_info").value;
+                TPDirect.card.getPrime(function (result) {
+                    if (!inputEmail || !inputName || !inputTelephone) {
+                        warming.style.display="block";
+                        return;
+                    }
+                    console.log(result)
+                    console.log(result.status)
+                    var inputPrime = result.card.prime;
+                    if (result.status !== 0) {
+                        warming.style.display="block";
+                        return;
+                    }
+                    var inputPrime = result.card.prime;
+                    orderData = {
+                        "prime": inputPrime,
+                        "order": {
+                            "price": price.innerHTML,
+                            "trip": {
+                                "attraction": {
+                                    "id": booking_data["data"]["attraction"]["id"],
+                                    "name": name.innerHTML,
+                                    "address":address.innerHTML,
+                                    "image":booking_data["data"]["attraction"]["image"].split(" ")[0]
+                                },
+                                "date": date.innerHTML,
+                                "time": time.innerHTML
+                            },
+                            // 須注意 "聯絡 email" 與 "登入 email" 一致
+                            "contact": {
+                                "name": inputName,
+                                "email": inputEmail,
+                                "phone": inputTelephone
+                            },
+                        }
+                    };
+                    console.log(orderData)
+                    order();
+
+                    async function order(){
+                        const response = await fetch("/api/orders", {
+                            method: "POST",
+                            headers: {"Content-Type": "application/json",},
+                            body: JSON.stringify(orderData)
+                        });
+                        const res = await response.json();
+                        if(res["message"]=="付款完成"){
+                            window.location="/thankyou?number="+res["訂單編號"]
+                        }else{
+                            alert("付款失敗")
+                        }
+                    }
+
+                })
+            }
+        </script>
+
+
+        <!-- 2. 官網 -->
+        <!-- <div class="four" id="cardview-container">
+            <h3 class="cc_info">信用卡付款資訊</h3>
+            卡片號碼：<div class="tpfield" id="card-number"><input></div>
+            過期時間：<div class="tpfield" id="card-expiration-date"><input></div>
+            驗證密碼：<div class="tpfield" id="card-ccv"><input></div>
+        </div> -->
+        <!-- <div class="message"></div> -->
+        <!-- <style>
+            .tpfield {
+                height: 40px;
+                width: 300px;
+                border: 1px solid gray;
+                margin: 5px 0;
+                padding: 5px;
+            }
+            .tappay-field-focus {
+                border-color: #66afe9;
+                outline: 0;
+                -webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, .075), 0 0 8px rgba(102, 175, 233, .6);
+                box-shadow: inset 0 1px 1px rgba(0, 0, 0, .075), 0 0 8px rgba(102, 175, 233, .6);
+            }
+        </style>
+        
+        <script src="https://js.tappaysdk.com/tpdirect/v5.8.0"></script>
+            <script>
+                TPDirect.setupSDK(104581, 'lcDsw7tkLWBtgfICsr4MJ6MMYJ2GIrVxfUZjm3ITi1tMmi5FCOfXvDDuiopfiFfg', 'sandbox')
+                TPDirect.card.setup({
+                    // Display ccv field
+                    let fields = {
+                        number: {
+                            // css selector
+                            element: '#card-number',
+                            placeholder: '**** **** **** ****'
+                        },
+                        expirationDate: {
+                            // DOM object
+                            element: document.getElementById('card-expiration-date'),
+                            placeholder: 'MM / YY'
+                        },
+                        ccv: {
+                            element: '#card-ccv',
+                            placeholder: 'ccv'
+                        }
+                    }
+                    styles: {
+                        // Style all elements
+                        'input': {
+                            'color': 'gray'
+                        },
+                        // Styling ccv field
+                        'input.ccv': {
+                            // 'font-size': '16px'
+                        },
+                        // Styling expiration-date field
+                        'input.expiration-date': {
+                            // 'font-size': '16px'
+                        },
+                        // Styling card-number field
+                        'input.card-number': {
+                            // 'font-size': '16px'
+                        },
+                        // style focus state
+                        ':focus': {
+                            // 'color': 'black'
+                        },
+                        // style valid state
+                        '.valid': {
+                            'color': 'green'
+                        },
+                        // style invalid state
+                        '.invalid': {
+                            'color': 'red'
+                        },
+                        // Media queries
+                        // Note that these apply to the iframe, not the root window.
+                        '@media screen and (max-width: 400px)': {
+                            'input': {
+                                'color': 'orange'
+                            }
+                        }
+                    }
+                })    
+            TPDirect.card.onUpdate(function (update) {
+                // update.canGetPrime === true
+                // you can call TPDirect.card.getPrime()
+                if (update.canGetPrime) {
+                    // Enable submit Button to get prime.
+                    submitButton.removeAttribute('disabled')
+                } else {
+                    // Disable submit Button to get prime.
+                    submitButton.setAttribute('disabled', true)
+                }
+
+                // // cardTypes = ['mastercard', 'visa', 'jcb', 'amex', 'unionpay','unknown']
+                // if (update.cardType === 'visa') {
+                //     // Handle card type visa.
+                // }
+
+                // number 欄位是錯誤的
+                if (update.status.number === 2) {
+                    setNumberFormGroupToError()
+                } else if (update.status.number === 0) {
+                    setNumberFormGroupToSuccess()
+                } else {
+                    setNumberFormGroupToNormal()
+                }
+
+                if (update.status.expiry === 2) {
+                    setNumberFormGroupToError()
+                } else if (update.status.expiry === 0) {
+                    setNumberFormGroupToSuccess()
+                } else {
+                    setNumberFormGroupToNormal()
+                }
+
+                if (update.status.ccv === 2) {
+                    setNumberFormGroupToError()
+                } else if (update.status.ccv === 0) {
+                    setNumberFormGroupToSuccess()
+                } else {
+                    setNumberFormGroupToNormal()
+                }
+            })
+            TPDirect.card.getTappayFieldsStatus()
+            function gett_prime(){
+                TPDirect.card.getPrime(function onSubmit(event) {
+                    event.preventDefault()
+
+                    // 取得 TapPay Fields 的 status
+                    const tappayStatus = TPDirect.card.getTappayFieldsStatus()
+
+                    // 確認是否可以 getPrime
+                    if (tappayStatus.canGetPrime === false) {
+                        alert('can not get prime')
+                        return
+                    }
+
+                    // Get prime
+                    TPDirect.card.getPrime((result) => {
+                        if (result.status !== 0) {
+                            alert('get prime error ' + result.msg)
+                            return
+                        }
+                        alert('get prime 成功，prime: ' + result.card.prime)
+
+                        // send prime to your server, to pay with Pay by Prime API .
+                        // Pay By Prime Docs: https://docs.tappaysdk.com/tutorial/zh/back.html#pay-by-prime-api
+                    })
+                })
+            }
+            
+        </script>
+        <div id="cardview-container">
+            <div class="tpfield" id="card-number"><input></div>
+            <div class="tpfield" id="card-expiration-date"><input></div>
+            <div class="tpfield" id="card-ccv"><input></div>
+            <button onclick="gett_prime()">onSubmit</button>
+        </div> -->
+
+        <!-- TapPay fields -->
+        <!-- <script src="https://js.tappaysdk.com/tpdirect/v5.8.0"></script>
+        <script>
+            TPDirect.setupSDK({
+                rbaAppId: "104581",
+                rbaAppKey: "lcDsw7tkLWBtgfICsr4MJ6MMYJ2GIrVxfUZjm3ITi1tMmi5FCOfXvDDuiopfiFfg",
+                tappayAppId: APP_ID,
+                tappayAppKey: "APP_KEY",
+                env: "production"
+            })
+        </script> -->
+        <!-- <script>
+            
+
+    
+        
+        </script>
+
+        
+        <script>
+            function check_pay(){
+                let req=new XMLHttpRequest();
+                req.open("post", "/api/orders");
+                req.onload=function (){
+
+                }
+                let pic=document.querySelector(".pic");
+                let name=document.querySelector("#name");
+                let date=document.querySelector("#date");
+                let time=document.querySelector("#time");
+                let price=document.querySelector("#price");
+                let address=document.querySelector("#address");
+                let contact=document.querySelector(".contact")
+                req.send(
+                    JSON.stringify({
+                        "prime": "前端從第三方金流 TapPay 取得的交易碼",
+                        "order": {
+                            "price": price.innerHTML,
+                            "trip": {
+                                "attraction": {
+                                    "id": booking_data["data"]["id"],
+                                    "name":name.innerHTML,
+                                    "address":address.innerHTML,
+                                    "image":pic.src
+                                },
+                                "date":date.innerHTML,
+                                "time":time.innerHTML
+                            },
+                            "contact": {
+                                // "name":contact.name_info.[1].innerHTML,
+                                // "email":contact.email_info.[1].innerHTML,
+                                // "phone":contact.phone_info.[1].innerHTML
+                            }
+                        }
+                    })
+                );
+            }
+        </script> -->
+
+        <!-- 底層============================================================ -->
+        <div class="copyright">
+            COPYRIGHT © 2021 台北一日遊
+        </div>
+        <!-- 登入彈出視窗============================================================ -->
+        <div class="overlay_login" id="overlay_login">
+            <div class="login_block" id="login_block">
+                <div class="login_top"></div>
+                <div class="login_title_area">
+                    <div class="login_title">登入會員帳號</div>
+                    <img class="icon_close" src="../static/icon_close.png" onclick="close_login()">
+                </div>
+                <input class="type_email" id="email_login" type="email" placeholder="輸入電子信箱">
+                <input class="type_password" id="password_login" type="password" placeholder="輸入密碼">
+                <div class="login_btn" onclick="login()">登入帳戶</div>
+
+                <div id="login_failed" style="display:none"></div>
+
+                <div class="not_yet_account" onclick="signup_after_popup()">還沒有帳戶？點此註冊</div>
+            </div>
+        </div>
+        <!-- 註冊彈出視窗 -->
+        <div class="overlay_signup" id="overlay_signup">
+            <div class="signup_block" id="signup_block">
+                <div class="signup_top"></div>
+                <div class="signup_title_area">
+                    <div class="signup_title">註冊會員帳號</div>
+                    <img class="icon_close" src="../static/icon_close.png" onclick="close_signup()">
+                </div>
+                <input class="signup_type_name" type="text" id="name_signup" placeholder="輸入姓名">
+                <input class="signup_type_email" type="email" id="email_signup" placeholder="輸入電子信箱">
+                <input class="signup_type_password" type="password" id="password_signup" placeholder="輸入密碼">
+                <div class="signup_btn" onclick="signup()">註冊新帳戶</div>
+
+                <div id="signup_failed" style="display:none">Email 已經註冊帳戶</div>
+                <div id="signup_succeed" style="display:none">註冊成功</div>
+                
+                <div class="yet_account" onclick = "login_after_popup()">已經有帳戶了？點此登入</div>
+            </div>
+        </div>
+    </body>
+</html>

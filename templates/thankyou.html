@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8"></meta>
+        <meta name="viewport" content="width=device-width initial-scale=1 maximum-scale=1"/>
+        <title>訂單狀況</title>
+        <script type="text/javascript">
+            let pathname=window.location.href
+            
+            // 檢查登入狀態
+            function init(){
+                let req=new XMLHttpRequest();
+                req.open("get","/api/user");
+                req.onload=function(){
+                    if(JSON.parse(this.responseText)["data"]!=null){
+                        let item2=document.getElementById("item2");
+                        item2.style.display="none";
+                        let logout=document.getElementById("logout");
+                        logout.style.display="block";
+                    }
+                    else{
+                        let item2=document.getElementById("item2");
+                        item2.style.display="block";
+                        let logout=document.getElementById("logout");
+                        logout.style.display="none";
+                    }
+                };
+                req.send();
+                document.getElementById("order_number").innerHTML=pathname.split("=").pop();
+            }
+
+            // 載入訂單資訊
+            function getData(){
+                let req=new XMLHttpRequest();
+                req.open("get","/api/orders?number="+pathname.split("=").pop()+"")
+                req.onload=function(){
+                    attraction_data=JSON.parse(this.responseText);
+                    console.log(this.responseText)
+                    if(attraction_data["message"] == "無此訂單"|| attraction_data == null){
+                        let icon = document.getElementById("icon");
+                        icon.src = "../static/red-cross-mark.jpg";
+                        order_status = document.getElementById("order_status");
+                        order_status.innerHTML = "無此訂單，請聯絡客服"
+                        document.querySelector("hr").style.display = "none";
+                        document.querySelector(".three").style.display = "none";
+                    }else{
+                        // img
+                        let image = document.createElement("img");
+                        image.className = "pic";
+                        image.src = attraction_data["data"]["trip"]["attraction"]["image"].split(" ").pop();
+                        let img_container = document.getElementById("img_container");
+                        img_container.appendChild(image);
+                        // attraction_name
+                        let attraction_name_cram = document.getElementById("attraction_name_cram");
+                        attraction_name_cram.innerHTML = attraction_data["data"]["trip"]["attraction"]["name"];
+                        // date
+                        let date_cram = document.getElementById("date_cram");
+                        date_cram.innerHTML = attraction_data["data"]["trip"]["date"];
+                        // time
+                        let time_cram = document.getElementById("time_cram");
+                        time_cram.innerHTML = attraction_data["data"]["trip"]["time"];
+                        // address
+                        let address_cram = document.getElementById("address_cram");
+                        address_cram.innerHTML = attraction_data["data"]["trip"]["attraction"]["address"];
+                        // contact_name
+                        let contact_name = document.getElementById("contact_name");
+                        contact_name.innerHTML = attraction_data["data"]["contact"]["name"];
+                        // contact_email
+                        let contact_email = document.getElementById("contact_email");
+                        contact_email.innerHTML = attraction_data["data"]["contact"]["email"];
+                        // contact_phone
+                        let contact_phone = document.getElementById("contact_phone");
+                        contact_phone.innerHTML = attraction_data["data"]["contact"]["phone"];
+                    }
+                }
+                req.send();
+            }
+
+            // 按下預訂行程按鈕
+            function booking_btn(){
+                let item2=document.getElementById("item2");
+                if(item2.style.display=="block"){
+                    show_login_area();
+                }
+                else{window.location="/booking"}
+            }   
+
+            // 登出會員
+            function logout(){
+                let req=new XMLHttpRequest();
+                req.open("DELETE","/api/user")
+                req.onload=function(){
+                    window.location="/";
+                    // let item2=document.getElementById("item2");
+                    // item2.style.display="block";
+                    // let logout=document.getElementById("logout");
+                    // logout.style.display="none";
+                }
+                req.send();
+            }
+            </script>
+
+            <style type="text/css">    
+                /* noto sans tc 載入 */
+                /* @import url(//fonts.googleapis.com/earlyaccess/notosanstc.css);
+                body{font-family: 'Noto Sans TC';} */
+
+                /* 頂層============================================================ */
+                .empty_fixed_bar{height: 54px;margin: 0px;position: fixed;top: 0;left: 0;right: 0;background-color: white;border-bottom: #e6e4e4 solid 1px;}
+                .navigation_bar{width: 1200px;height: 54px;background-color: white;
+                    margin-left: auto;margin-right: auto;
+                    display: flex;align-items: center;
+                }  
+                .taipei_oneday_tourist{font-weight: bold;font-size: 20px;margin-left: 10px;color:rgb(34, 177, 177);cursor: pointer;}
+                .item1{width:100px;text-align: center;font-size: 15px;margin-left:auto;margin-right: -10px;padding: 0px;color: #666666;cursor: pointer;}
+                .item2{width:100px;text-align: center;font-size: 15px;float:right;margin-left: -10px;margin-right: 10px;color: #666666;cursor: pointer;}
+                .logout{width:100px;text-align: center;font-size: 15px;margin-left: -10px;margin-right: 10px;padding: 0px;color: #666666;display: none;cursor: pointer;}
+                
+                .empty_bar{height: 54px;margin: 0px;}
+
+                /* 第二層 */
+                .second{height: 300px;text-align: center;align-items: center;justify-content: center;box-sizing: border-box;padding-top: 20px;font-weight: bold;font-size: 25px;letter-spacing: 10px;line-height: 50px;}
+                #icon{width: 100px;margin-bottom: 20px;margin-left: auto;margin-right: auto;border-radius: 50%;}
+                /* .second>div{height: 150px;margin-top:20px;line-height: 150px;} */
+
+                /* 第三層 */
+                #long_hr{width: 1200px;border: 1px solid #f1f0f0;}
+                .three{width: 1200px;margin-left: auto;margin-right: auto;align-items: center;justify-content: center;display: flex;}
+                #img_container{width: 450px;height: 338px;}
+                .pic{width: 450px;height: 338px;object-fit: cover;display: block;}
+                .three_2{width:90%;margin-left: 40px;padding-top: 0px;}
+                #attraction_name_cram{margin-top:0px;color:rgb(34, 177, 177);margin-bottom: 5px;}
+                h4{display: inline;}
+                /* 底層 */
+                .copyright{background-color: #757575;text-align: center;line-height: 104px;color: white;font-size: 13.3px;margin-top: 40px;margin-bottom: 0px;padding-bottom: 100vh;}
+
+                @media (max-width:1200px){
+                    /* 頂層============================================================ */
+                    .empty_fixed_bar{width: 100%;}
+                    .navigation_bar{width:100%;height: 54px;}
+                    .taipei_oneday_tourist{width: 150px; height: 34px;font-size: 30px;}
+                    .item1{width: 64px;height: 14px;margin-right: 10px;padding: 15px;font-size: 16px;}
+                    .item2{width: 71px;height: 14px;margin-right: 10px;font-size: 16px;}
+                    .logout{width: 71px;height: 14px;margin-right: 10px;font-size: 16px;}
+                    /* 第三層========================================================== */
+                    #long_hr{width: 90%;border: 1px solid #f1f0f0;}
+                    #img_container{width: 40%;}
+                    
+                    .pic{width: 100%;display: block;}
+                    .three_2{width: 40%;margin-left: 40px;}
+                }
+                @media (max-width:600px){
+                    /* 頂層============================================================ */
+                    .navigation_bar{width:100%;height: 54px;}
+                    .taipei_oneday_tourist{width: 150px; height: 34px;font-size: 30px;}
+                    .item1{width: 64px;height: 14px;margin-right: 15px;padding: 10px;font-size: 16px}
+                    .item2{width: 71px;height: 14px;margin-right: 10px;font-size: 16px}
+                    /* 第二層========================================================== */
+                    .second{font-size: 16px;font-weight: bold;text-align: center;}
+                    #order_number{letter-spacing:2px}
+                    /* 第三層========================================================== */
+                    .three{display: block;}
+                    #img_container{width: 90%;height: 210px;margin-left: auto;margin-right: auto;display: flex;}
+                    .pic{display:block;object-fit: cover;}
+                    .three_2{width: 90%;margin-top: 20px;margin-left: auto;margin-right: auto;}
+                }
+            </style>
+    </head>
+    <body style="margin: 0px;" onload="init(),getData()" id="body">
+        <!-- 頂層 -->
+        <div class="empty_fixed_bar">
+            <div class="navigation_bar">
+                <div class="taipei_oneday_tourist" onclick="location.href='/'">台北一日遊</div>
+                <span class="item1" id="item1" onclick="booking_btn()">預定行程</span>
+                <span class="item2" id="item2">
+                    <span onclick="show_login_area()">登入</span>/<span onclick="show_signup_area()">註冊</span>
+                </span>
+                <span class="logout" id="logout" onclick="logout()">登出系統</span>
+            </div> 
+        </div>  
+        <div class="empty_bar"></div>
+        <!-- body -->
+        <div style="margin-left:auto;margin-right:auto;">
+        <!-- 第二層 -->
+            <div class="second">
+                <img id="icon" src="../static/check.jpg">
+                <div>訂單編號：<span id="order_number"></span>
+                <br><span id="order_status">已經完成付款，感謝您</span>
+                </div>
+            </div>
+
+            <!-- 第三層 -->
+            <hr id="long_hr">
+            <div class="three">
+                <!-- 左 照片 -->
+                <div id="img_container">
+                    <!-- <img src="https://www.travel.taipei/d_upload_ttn/sceneadmin/pic/11000784.jpg" class="pic"> -->
+                </div>
+                <!-- 右 文字 -->
+                <div class="three_2">
+                    <h2 id="attraction_name_cram"></h2>
+                    <div style="line-height:2.5em;margin-top: 0px;">
+                        <h4>日期：</h4><span id="date_cram"></span>
+                        <br>
+                        <h4>時間：</h4><span id="time_cram"></span>
+                        <br>
+                        <h4>地點：</h4><span id="address_cram"></span>
+                    </div>
+                    <div style="line-height:2.5em;padding-top: 6px;border-top:1px solid #E8E8E8;">
+                        <h4>聯絡姓名：</h4><span id="contact_name"></span>
+                        <br>
+                        <h4>聯絡信箱：</h4><span id="contact_email"></span>
+                        <br>
+                        <h4>手機號碼：</h4><span id="contact_phone"></span>
+                    </div>
+                    <hr style="border: 1px solid #f1f0f0;">
+                    <h4 style="margin-top: 5px;padding-top: 15px;">提醒：於行程前三至五天，系統會依據您的聯絡信箱寄發通知</h4><span></span>
+                </div>
+            </div>
+        </div>
+
+
+        <!-- footer -->
+        <div class="copyright">
+            COPYRIGHT © 2021 台北一日遊
+        </div>
+    </body>
+</html>

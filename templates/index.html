@@ -1,0 +1,1000 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8"></meta>
+        <meta name="viewport" content="width=device-width initial-scale=1 maximum-scale=1"/>
+        <title>台北市景點列表</title>
+        <!-- <script src="https://kit.fontawesome.com/yourcode.js" crossorigin="anonymous"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css" crossorigin="anonymous"></script> -->
+        <script type="text/javascript">
+
+            // let fso = new ActiveXObject(Scripting.FileSystemObject);
+            // let f = fso.opentextfile("../env.txt",1,true);
+            // f.readline()
+            // let h = fso.opentextfile("env.txt",1,true);
+            // f.readline()
+
+            let nextPage;
+            let attractions_data;
+            let btn_function;
+            let keyword_nextPage;
+            let search_tourist_name_value;
+            let stop_loading_new_data="no"; // 停止重複 loading 功能
+
+            // 檢查登入狀態
+            function init(){
+                let req=new XMLHttpRequest();
+                req.open("get","/api/user");
+                req.onload=function(){
+                    if(JSON.parse(this.responseText)["data"]!=null){
+                        let item2=document.getElementById("item2");
+                        item2.style.display="none";
+                        let logout=document.getElementById("logout");
+                        logout.style.display="block";
+                    }
+                    else{
+                        let item2=document.getElementById("item2");
+                        item2.style.display="block";
+                        let logout=document.getElementById("logout");
+                        logout.style.display="none";
+                    }
+                };
+                req.send();
+            }            
+
+            // 載入 12 張圖片
+            function getData(){
+                let req=new XMLHttpRequest();
+                req.open("get","/api/attractions?page=0")
+                req.onload=function(){
+                    attractions_data=JSON.parse(this.responseText)
+                    for(let j=0;j<12;j++){
+                        let div1=document.createElement("a");
+                        div1.className="picline1";
+                        // 嘗試 div + href 失敗
+                        div1.href='/attraction/'+(j+1);
+                        newdiv.appendChild(div1);
+                        //img
+                        let image=document.createElement("img");
+                        image.className="first4pics";
+                        image.src=attractions_data["data"][j]["images"][0];
+                        div1.appendChild(image);
+                        // up_word
+                        let up_word=document.createElement("div");
+                        up_word.className="up_word";
+                        up_word.innerHTML=attractions_data["data"][j]["name"]
+                        div1.appendChild(up_word);
+
+                        // down_word_zone
+                        let down_word_zone=document.createElement("div");
+                        down_word_zone.className="down_word_zone"
+                        div1.appendChild(down_word_zone)
+                        // down_word_left
+                        let down_word_left=document.createElement("div");
+                        down_word_left.className="down_word_left";
+                        down_word_left.innerHTML=attractions_data["data"][j]["mrt"];
+                        down_word_zone.appendChild(down_word_left);
+                        // down_word_right
+                        let down_word_right=document.createElement("div");
+                        down_word_right.className="down_word_right";
+                        down_word_right.innerHTML=attractions_data["data"][j]["category"];
+                        down_word_zone.appendChild(down_word_right);
+
+                        setTimeout(function(){
+                            document.querySelector(".loading_wrapper").style.display="none";
+                        }, 1000);
+                    }
+                    
+                }
+                req.send();
+            }
+            
+            window.onscroll = ()=>{
+                nextPage=attractions_data["nextPage"]
+                let cHeight = document.documentElement.clientHeight; // 可視高度
+                let sHeight = document.documentElement.scrollHeight; // 總高度
+                let sTop = document.documentElement.scrollTop;       // 捲進去的高度
+                if(sHeight == cHeight+ sTop) {
+
+                    // 沒有keyword
+                    if(nextPage!=null&btn_function!="yes"&stop_loading_new_data!="yes"){
+                        stop_loading_new_data="yes" // 停止重複 loading 
+
+                        // document.querySelector(".loading_wrapper").style.display="block";
+                        // let loading_wrapper=document.createElement("div");
+                        // loading_wrapper.className="loading_wrapper";
+                        // newdiv.appendChild(loading_wrapper);
+                        // let loading=document.createElement("div");
+                        // loading.className="loading la-ball-newton-cradle la-3x";
+                        // loading_wrapper.appendChild(loading);
+                        // loading.appendChild(document.createElement("div"));
+                        // loading.appendChild(document.createElement("div"));
+                        // loading.appendChild(document.createElement("div"));
+                        // loading.appendChild(document.createElement("div"));
+                        let loading_div=document.createElement("div");
+                        loading_div.className="loading_div";
+                        // let loading=document.createElement("img");
+                        // loading.src="../static/loading.jpg"
+                        newdiv.appendChild(loading_div);
+
+                        // setTimeout(function(){
+                        let req=new XMLHttpRequest();
+                        req.open("get","/api/attractions?page="+nextPage+"")
+                        req.onload=function(){
+                            attractions_data=JSON.parse(this.responseText)
+                            for(let j=0;j<12;j++){
+                                if(attractions_data["data"][j]!=undefined){
+                                    let div1=document.createElement("a");
+                                    div1.className="picline1";
+                                    div1.href="/attraction/"+attractions_data["data"][j]["id"];
+                                    newdiv.appendChild(div1);
+                                    
+                                    //img
+                                    let image=document.createElement("img");
+                                    image.className="first4pics";
+                                    image.src=attractions_data["data"][j]["images"][0];
+                                    div1.appendChild(image);
+                                    // up_word
+                                    let up_word=document.createElement("div");
+                                    up_word.className="up_word";
+                                    up_word.innerHTML=attractions_data["data"][j]["name"]
+                                    div1.appendChild(up_word);
+
+                                    // down_word_zone
+                                    let down_word_zone=document.createElement("div");
+                                    down_word_zone.className="down_word_zone"
+                                    div1.appendChild(down_word_zone)
+                                    // down_word_left
+                                    let down_word_left=document.createElement("div");
+                                    down_word_left.className="down_word_left";
+                                    down_word_left.innerHTML=attractions_data["data"][j]["mrt"];
+                                    down_word_zone.appendChild(down_word_left);
+                                    // down_word_right
+                                    let down_word_right=document.createElement("div");
+                                    down_word_right.className="down_word_right";
+                                    down_word_right.innerHTML=attractions_data["data"][j]["category"];
+                                    down_word_zone.appendChild(down_word_right);
+                                    // 停止重複 loading 功能關閉
+                                    stop_loading_new_data="no"
+                                    
+                                    setTimeout(function(){
+                                        loading_div.remove();
+                                    }, 1000);
+                                }
+                            }
+                        }
+                        req.send();
+                        //     async function remove(){
+                        //          loading_div.remove();
+                        //     }
+                        //     remove();
+                        // }, 1000);   
+                    }
+                    // 有 keyword，有下頁
+                    else if(keyword_nextPage>0&keyword_nextPage!=null&btn_function==="yes"&stop_loading_new_data!="yes"){
+                        stop_loading_new_data="yes" // 停止重複 loading 功能開啟
+
+                        let loading_div=document.createElement("div");
+                        loading_div.className="loading_div";
+                        newdiv.appendChild(loading_div);
+
+                        setTimeout(function(){
+                            let req=new XMLHttpRequest();
+                            req.open("get","/api/attractions?page="+keyword_nextPage+"&keyword="+search_tourist_name_value+"")
+                            req.onload=function(){
+                                attractions_data=JSON.parse(this.responseText)
+                                for(let j=0;j<12;j++){
+                                    if(attractions_data["data"][j]!=undefined){
+                                        let div1=document.createElement("a");
+                                        div1.className="picline1";
+                                        div1.href="/attraction/"+attractions_data["data"][j]["id"];
+                                        newdiv.appendChild(div1);
+                                        
+                                        //img
+                                        let image=document.createElement("img");
+                                        image.className="first4pics";
+                                        image.src=attractions_data["data"][j]["images"][0];
+                                        div1.appendChild(image);
+                                        // up_word
+                                        let up_word=document.createElement("div");
+                                        up_word.className="up_word";
+                                        up_word.innerHTML=attractions_data["data"][j]["name"]
+                                        div1.appendChild(up_word);
+
+                                        // down_word_zone
+                                        let down_word_zone=document.createElement("div");
+                                        down_word_zone.className="down_word_zone"
+                                        div1.appendChild(down_word_zone)
+                                        // down_word_left
+                                        let down_word_left=document.createElement("div");
+                                        down_word_left.className="down_word_left";
+                                        down_word_left.innerHTML=attractions_data["data"][j]["mrt"];
+                                        down_word_zone.appendChild(down_word_left);
+                                        // down_word_right
+                                        let down_word_right=document.createElement("div");
+                                        down_word_right.className="down_word_right";
+                                        down_word_right.innerHTML=attractions_data["data"][j]["category"];
+                                        down_word_zone.appendChild(down_word_right);
+                                        // 停止重複 loading 功能關閉
+                                        stop_loading_new_data="no"
+                                    }
+                                }
+                                keyword_nextPage=attractions_data["nextPage"]
+                            }
+                            req.send();
+                            loading_div.remove();
+                        },1000)
+                    }
+                }
+            }
+            
+            function btn(){
+                search_tourist_name_value=document.getElementById("search_tourist_name").value;
+                newdiv.innerHTML=null;
+                let req=new XMLHttpRequest();
+                req.open("get","/api/attractions?page=0&keyword="+search_tourist_name_value+"")
+                req.onload=function(){
+                    attractions_data=JSON.parse(this.responseText)
+                    if(attractions_data["message"]=="沒有此關鍵字的資料"){
+                        newdiv.innerHTML="沒有此關鍵字的資料"
+                    }
+                    else{
+                        for(let j=0;j<12;j++){
+                            if(attractions_data["data"][j]!=undefined){
+                                let div1=document.createElement("a");
+                                div1.className="picline1";
+                                div1.href="/attraction/"+attractions_data["data"][j]["id"];
+                                newdiv.appendChild(div1);
+                                //img
+                                let image=document.createElement("img");
+                                image.className="first4pics";
+                                image.src=attractions_data["data"][j]["images"][0];
+                                div1.appendChild(image);
+                                // up_word
+                                let up_word=document.createElement("div");
+                                up_word.className="up_word";
+                                up_word.innerHTML=attractions_data["data"][j]["name"]
+                                div1.appendChild(up_word);
+
+                                // down_word_zone
+                                let down_word_zone=document.createElement("div");
+                                down_word_zone.className="down_word_zone"
+                                div1.appendChild(down_word_zone)
+                                // down_word_left
+                                let down_word_left=document.createElement("div");
+                                down_word_left.className="down_word_left";
+                                down_word_left.innerHTML=attractions_data["data"][j]["mrt"];
+                                down_word_zone.appendChild(down_word_left);
+                                // down_word_right
+                                let down_word_right=document.createElement("div");
+                                down_word_right.className="down_word_right";
+                                down_word_right.innerHTML=attractions_data["data"][j]["category"];
+                                down_word_zone.appendChild(down_word_right);
+                            }
+                        }
+                    }
+                    btn_function="yes";
+                    keyword_nextPage=attractions_data["nextPage"];
+                }
+                req.send();                
+            }      
+            
+            // 按下預訂行程按鈕
+            function booking_btn(){
+                let item2=document.getElementById("item2");
+                if(item2.style.display=="block"){
+                    show_login_area();
+                }
+                else{window.location="/booking"}
+            }      
+
+            // 按下登入鍵
+            function show_login_area(){
+                let overlay_login=document.getElementById("overlay_login");
+                overlay_login.style.display="block";
+            }
+            function close_login(){
+                let overlay_login=document.getElementById("overlay_login");
+                overlay_login.style.display="none";
+            }
+            // 按下註冊鍵
+            function show_signup_area(){
+                let overlay_signup=document.getElementById("overlay_signup");
+                overlay_signup.style.display="block";
+                let signup_failed=document.getElementById("signup_failed");
+                signup_failed.style.display="none";
+                let signup_succeed=document.getElementById("signup_succeed");
+                signup_succeed.style.display="none";
+            }
+            function close_signup(){
+                let overlay_signup=document.getElementById("overlay_signup");
+                overlay_signup.style.display="none";
+            }
+            // 還沒有帳戶？點此註冊
+            function signup_after_popup(){
+                let overlay_login=document.getElementById("overlay_login");
+                overlay_login.style.display="none"
+                let overlay_signup=document.getElementById("overlay_signup");
+                overlay_signup.style.display="block";
+            }
+            // 已經有帳戶了？點此登入
+            function login_after_popup(){
+                let overlay_signup=document.getElementById("overlay_signup");
+                overlay_signup.style.display="none";
+                let overlay_login=document.getElementById("overlay_login");
+                overlay_login.style.display="block";
+            }
+        </script>
+
+        <style type="text/css">    
+            /* noto sans tc 載入 */
+            @import url(//fonts.googleapis.com/earlyaccess/notosanstc.css);
+            body{font-family: 'Noto Sans TC';}
+
+            /* 頂層============================================================ */
+            .empty_fixed_bar{height: 54px;margin: 0px;position: fixed;top: 0;left: 0;right: 0;background-color: white;border-bottom: #e6e4e4 solid 1px;}
+            .navigation_bar{width: 1200px;height: 54px;background-color: white;
+                margin-left: auto;margin-right: auto;
+                display: flex;align-items: center;
+            }  
+            .taipei_oneday_tourist{font-weight: bold;font-size: 20px;margin-left: 10px;color:rgb(34, 177, 177);cursor: pointer;}
+            .item1{width:100px;text-align: center;font-size: 15px;margin-left:auto;margin-right: -10px;padding: 0px;color: #666666;cursor: pointer;}
+            .item2{width:100px;text-align: center;font-size: 15px;float:right;margin-left: -10px;margin-right: 10px;color: #666666;cursor: pointer;}
+            .logout{width:100px;text-align: center;font-size: 15px;margin-left: -10px;margin-right: 10px;padding: 0px;color: #666666;display: none;cursor: pointer;}
+            
+            .empty_bar{height: 54px;margin: 0px;}
+
+            /* 第二層============================================================ */
+            .second_bar_background{height: 320px;display: flex;align-items: center;justify-content: center;margin: 0px;
+                background-image:url("../static/CKS_Memory_Hall.png"),linear-gradient(135deg, #AADDEE 0%, #66AABB 100%);
+                background-repeat: no-repeat;background-position:top 0px right 232px, 0px;
+                background-size: 650px 320px,1920px 320px;}
+                
+            .three_items_in_one_div{width: 1200px;height: 169px;align-items: flex-start;margin-left: auto;margin-right: auto;}
+            /* 輕鬆享受台北一日悠閒 */
+            .easy_enjoy{width: 1180px;height: 40px;margin: 10px;color: white;font-weight: bold;text-align: left;font-weight: 700;font-size: 28px;line-height: 24px;}
+            /* 探索每個角落，體驗城市的深度旅遊行程 */
+            .explore_every_corner{width: 1180px;height: 20px;margin: 10px;color: white;text-align: left;font-weight: 400;font-size: 16px;line-height: 13.3px;}
+            /* 輸入景點名稱查詢 */
+            .insert_and_btn{width: 460px;height: 46px;display: flex;margin-top: 15px;margin-left: 10px;}
+            .search_tourist_name{width: 400px;height: 46px;margin: 0px;padding-left: 15px;box-sizing: border-box;border: 0px;
+                border-top-left-radius: 9px;border-bottom-left-radius: 9px;font-weight: bold;font-size: 14px;}
+            .btn{width: 60px;height: 46px;margin: 0px;background-color: #448899;box-sizing: border-box;border: 0px;
+                border-top-right-radius: 15%;border-bottom-right-radius: 15%;}
+            ::placeholder {color: #757575;}
+
+            /* 第三層============================================================ */
+            .newdiv{width: 1200px;
+                display: flex;justify-content: center;flex-wrap:wrap;margin: auto;
+                margin-top: 40px;
+                color: #757575;
+            }
+            .picline1{width: 270px;height: 242px;margin:15px;flex: none;border-radius: 5px;border:rgb(226, 224, 224) solid 4px;box-sizing: border-box;} /* 12個方框 */
+            .first4pics{width:265px;height:162px;display: block;box-sizing: border-box;} /* 方框裡的照片 */
+            .up_word{width:270px;height:40px;font-size: 0.9rem;font-weight: 700;line-height: 40px;padding-left: 10px;box-sizing: border-box;}/* 方框裡的上層字 */
+            .down_word_zone{width:270px;height:40px;line-height: 30px;display: flex;} /* 方框裡的下層字區塊 */
+            .down_word_left{width: 125px;height: 20px;margin-left: 10px;margin-bottom: 12px;font-size: 16px;text-align: left;}/* 方框裡的下層字區塊左 */
+            .down_word_right{width: 125px;height: 20px;margin-right: 10px;margin-bottom: 12px;font-size: 16px;text-align: right;}/* 方框裡的下層字區塊右 */
+            
+
+            /* 底層 */
+            .copyright{height:104px;background-color: #757575;text-align: center;line-height: 104px;color: white;font-size: 13.3px;margin-top: 40px;}
+
+             /* a */
+             a{text-decoration: none;color:#666666;}
+
+            /* 登入彈出視窗 */
+            .overlay_login{width: 100%;height: 100%;display: none;position: fixed;z-index: 100;top: 0;left: 0;background: rgb(0,0,0,0.7);}
+            .login_block{
+                width: 340px;
+                position: fixed;top: 80px;left: 50%;transform: translate(-170px,0px);
+                border-radius: 6px;background-color: white;                
+            }
+            .login_top{width: 340px;height: 10px;
+                background: linear-gradient(270deg, #337788 0%, #66AABB 100%);
+                border-top-left-radius: 6px;border-top-right-radius: 6px;
+            }
+            .login_title_area{width: 310px;height: 27px;margin-top: 15px;margin-left: auto;margin-right: auto;display: flex;}
+            .login_title{margin-left: auto;margin-right: auto;font-size: 24px;font-weight: bold;text-align: center;}
+            .icon_close{width: 16px;height: 16px;top: 0px;right: 0px;cursor: pointer;}
+            .type_email{width: 310px;height: 47px;margin-top: 15px;margin-left: 15px;box-sizing: border-box;padding: 0px;padding-left: 10px;}
+            #email_login_error_message{width: 310px;margin-top: 8px;margin-left: 15px;box-sizing: border-box;padding: 0px;padding-left: 10px;color:red;display: none;}
+            .type_password{width: 310px;height: 47px;margin-top: 10px;margin-left: 15px;box-sizing: border-box;padding: 0px;padding-left: 10px;}
+            .login_btn{width: 310px;height: 47px;margin-top: 10px;margin-left: 15px;font-size: 16px;text-align: center;border-radius: 5px;line-height: 47px;box-sizing: border-box;padding: 0px;background-color: #448899;color: white;cursor: pointer;}
+            #login_failed{width: 310px;height: 47px;margin-top: 10px;margin-left: 15px;font-size: 16px;text-align: center;line-height: 47px;box-sizing: border-box;padding: 0px;color: red;}
+            .not_yet_account{width: 310px;height: 22px;margin-top: 10px;margin-bottom: 15px;margin-left: 15px;font-size: 16px;text-align: center;cursor: pointer;}
+
+            /* 註冊彈出視窗 */
+            .overlay_signup{width: 100%;height: 100%;display: none;position: fixed;z-index: 100;top: 0;left: 0;background: rgb(0,0,0,0.7);}
+            .signup_block{
+                width: 340px;
+                position: fixed;top: 80px;left: 50%;transform: translate(-170px,0px);
+                border-radius: 6px;background-color: white;                
+            }
+            .signup_top{width: 340px;height: 10px;
+                background: linear-gradient(270deg, #337788 0%, #66AABB 100%);
+                border-top-left-radius: 6px;border-top-right-radius: 6px;
+            }
+            .signup_title_area{width: 310px;height: 27px;margin-top: 15px;margin-left: auto;margin-right: auto;display: flex;}
+            .signup_title{margin-left: auto;margin-right: auto;font-size: 24px;font-weight: bold;text-align: center;}
+            .icon_close{width: 16px;height: 16px;top: 0px;right: 0px;cursor: pointer;}
+            .signup_type_name{width: 310px;height: 47px;margin-top: 15px;margin-left: 15px;box-sizing: border-box;padding: 0px;padding-left: 10px;}
+            /* #name_signup_check{display: block;width: 30px;height: 30px;}
+            i{position: absolute;top: 40px;right: 10px;} */
+            #name_signup_error_message{width: 310px;margin-top: 8px;margin-left: 15px;box-sizing: border-box;padding: 0px;padding-left: 10px;color:red;display: none;}
+            .signup_type_email{width: 310px;height: 47px;margin-top: 10px;margin-left: 15px;box-sizing: border-box;padding: 0px;padding-left: 10px;}
+            #email_signup_error_message{width: 310px;margin-top: 8px;margin-left: 15px;box-sizing: border-box;padding: 0px;padding-left: 10px;color:red;display: none;}
+            .signup_type_password{width: 310px;height: 47px;margin-top: 10px;margin-left: 15px;box-sizing: border-box;padding: 0px;padding-left: 10px;}
+            #password_signup_error_message{width: 310px;margin-top: 8px;margin-left: 15px;box-sizing: border-box;padding: 0px;padding-left: 10px;color:red;display: none;}
+            .signup_btn{width: 310px;height: 47px;margin-top: 10px;margin-left: 15px;font-size: 16px;text-align: center;border-radius: 5px;line-height: 47px;box-sizing: border-box;padding: 0px;background-color: #448899;color: white;cursor: pointer;}
+            #signup_failed{width: 310px;height: 47px;margin-top: 10px;margin-left: 15px;font-size: 16px;text-align: center;line-height: 47px;box-sizing: border-box;padding: 0px;color: red;}
+            #signup_succeed{width: 310px;height: 47px;margin-top: 10px;margin-left: 15px;font-size: 16px;text-align: center;line-height: 47px;box-sizing: border-box;padding: 0px;color: green;}
+            .yet_account{width: 310px;height: 22px;margin-top: 10px;margin-bottom: 15px;margin-left: 15px;font-size: 16px;text-align: center;cursor: pointer;}
+
+            /* 載入效果 */
+            .loading_wrapper{
+                background-color: white;
+                width: 100%;
+                height: 100rem;
+                z-index: 101;
+            }
+            .loading{
+                position: absolute;
+                margin-top: 50px;
+                left: 50%;transform: translate(-48.5%, 0px);
+            }
+            .la-ball-newton-cradle,
+            .la-ball-newton-cradle > div {
+                position: relative;
+                -webkit-box-sizing: border-box;
+                -moz-box-sizing: border-box;
+                        box-sizing: border-box;
+            }
+            .la-ball-newton-cradle {
+                display: block;
+                font-size: 0;
+                color: #fff;
+            }
+            .la-ball-newton-cradle.la-dark {
+                color: #333;
+            }
+            .la-ball-newton-cradle > div {
+                display: inline-block;
+                float: none;
+                background-color: currentColor;
+                border: 0 solid currentColor;
+            }
+            .la-ball-newton-cradle {
+                width: 40px;
+                height: 10px;
+            }
+            .la-ball-newton-cradle > div {
+                width: 10px;
+                height: 10px;
+                border-radius: 100%;
+            }
+            .la-ball-newton-cradle > div:first-child {
+                -webkit-transform: translateX(0%);
+                -moz-transform: translateX(0%);
+                    -ms-transform: translateX(0%);
+                    -o-transform: translateX(0%);
+                        transform: translateX(0%);
+                -webkit-animation: ball-newton-cradle-left 1s 0s ease-out infinite;
+                -moz-animation: ball-newton-cradle-left 1s 0s ease-out infinite;
+                    -o-animation: ball-newton-cradle-left 1s 0s ease-out infinite;
+                        animation: ball-newton-cradle-left 1s 0s ease-out infinite;
+            }
+            .la-ball-newton-cradle > div:last-child {
+                -webkit-transform: translateX(0%);
+                -moz-transform: translateX(0%);
+                    -ms-transform: translateX(0%);
+                    -o-transform: translateX(0%);
+                        transform: translateX(0%);
+                -webkit-animation: ball-newton-cradle-right 1s 0s ease-out infinite;
+                -moz-animation: ball-newton-cradle-right 1s 0s ease-out infinite;
+                    -o-animation: ball-newton-cradle-right 1s 0s ease-out infinite;
+                        animation: ball-newton-cradle-right 1s 0s ease-out infinite;
+            }
+            .la-ball-newton-cradle.la-sm {
+                width: 20px;
+                height: 4px;
+            }
+            .la-ball-newton-cradle.la-sm > div {
+                width: 4px;
+                height: 4px;
+            }
+            .la-ball-newton-cradle.la-2x {
+                width: 80px;
+                height: 20px;
+            }
+            .la-ball-newton-cradle.la-2x > div {
+                width: 20px;
+                height: 20px;
+            }
+            .la-ball-newton-cradle.la-3x {
+                width: 120px;
+                height: 30px;
+            }
+            .la-ball-newton-cradle.la-3x > div {
+                width: 30px;
+                height: 30px;
+            }
+            /*
+            * Animations
+            */
+            @-webkit-keyframes ball-newton-cradle-left {
+                25% {
+                    -webkit-transform: translateX(-100%);
+                            transform: translateX(-100%);
+                    -webkit-animation-timing-function: ease-in;
+                            animation-timing-function: ease-in;
+                }
+                50% {
+                    -webkit-transform: translateX(0%);
+                            transform: translateX(0%);
+                }
+            }
+            @-moz-keyframes ball-newton-cradle-left {
+                25% {
+                    -moz-transform: translateX(-100%);
+                        transform: translateX(-100%);
+                    -moz-animation-timing-function: ease-in;
+                        animation-timing-function: ease-in;
+                }
+                50% {
+                    -moz-transform: translateX(0%);
+                        transform: translateX(0%);
+                }
+            }
+            @-o-keyframes ball-newton-cradle-left {
+                25% {
+                    -o-transform: translateX(-100%);
+                    transform: translateX(-100%);
+                    -o-animation-timing-function: ease-in;
+                    animation-timing-function: ease-in;
+                }
+                50% {
+                    -o-transform: translateX(0%);
+                    transform: translateX(0%);
+                }
+            }
+            @keyframes ball-newton-cradle-left {
+                25% {
+                    -webkit-transform: translateX(-100%);
+                    -moz-transform: translateX(-100%);
+                        -o-transform: translateX(-100%);
+                            transform: translateX(-100%);
+                    -webkit-animation-timing-function: ease-in;
+                    -moz-animation-timing-function: ease-in;
+                        -o-animation-timing-function: ease-in;
+                            animation-timing-function: ease-in;
+                }
+                50% {
+                    -webkit-transform: translateX(0%);
+                    -moz-transform: translateX(0%);
+                        -o-transform: translateX(0%);
+                            transform: translateX(0%);
+                }
+            }
+            @-webkit-keyframes ball-newton-cradle-right {
+                50% {
+                    -webkit-transform: translateX(0%);
+                            transform: translateX(0%);
+                }
+                75% {
+                    -webkit-transform: translateX(100%);
+                            transform: translateX(100%);
+                    -webkit-animation-timing-function: ease-in;
+                            animation-timing-function: ease-in;
+                }
+                100% {
+                    -webkit-transform: translateX(0%);
+                            transform: translateX(0%);
+                }
+            }
+            @-moz-keyframes ball-newton-cradle-right {
+                50% {
+                    -moz-transform: translateX(0%);
+                        transform: translateX(0%);
+                }
+                75% {
+                    -moz-transform: translateX(100%);
+                        transform: translateX(100%);
+                    -moz-animation-timing-function: ease-in;
+                        animation-timing-function: ease-in;
+                }
+                100% {
+                    -moz-transform: translateX(0%);
+                        transform: translateX(0%);
+                }
+            }
+            @-o-keyframes ball-newton-cradle-right {
+                50% {
+                    -o-transform: translateX(0%);
+                    transform: translateX(0%);
+                }
+                75% {
+                    -o-transform: translateX(100%);
+                    transform: translateX(100%);
+                    -o-animation-timing-function: ease-in;
+                    animation-timing-function: ease-in;
+                }
+                100% {
+                    -o-transform: translateX(0%);
+                    transform: translateX(0%);
+                }
+            }
+            @keyframes ball-newton-cradle-right {
+                50% {
+                    -webkit-transform: translateX(0%);
+                    -moz-transform: translateX(0%);
+                        -o-transform: translateX(0%);
+                            transform: translateX(0%);
+                }
+                75% {
+                    -webkit-transform: translateX(100%);
+                    -moz-transform: translateX(100%);
+                        -o-transform: translateX(100%);
+                            transform: translateX(100%);
+                    -webkit-animation-timing-function: ease-in;
+                    -moz-animation-timing-function: ease-in;
+                        -o-animation-timing-function: ease-in;
+                            animation-timing-function: ease-in;
+                }
+                100% {
+                    -webkit-transform: translateX(0%);
+                    -moz-transform: translateX(0%);
+                        -o-transform: translateX(0%);
+                            transform: translateX(0%);
+                }
+            }
+            .loading_div{
+                width: 100%;
+                height: 500px;
+                background-image:url("../static/loading.jpg");
+                background-repeat: no-repeat;background-position:top -50px left 50%;
+                background-size: 400px 300px;
+            }
+            /* .loading_gif{} */
+
+            
+            @media (max-width:1200px){
+                /* 頂層============================================================ */
+                .navigation_bar{width:100%;height: 54px;}
+                .taipei_oneday_tourist{width: 150px; height: 34px;font-size: 30px;}
+                .item1{width: 64px;height: 14px;margin-right: 10px;padding: 15px;font-size: 16px}
+                .item2{width: 71px;height: 14px;margin-right: 10px;font-size: 16px}
+                .logout{width: 71px;height: 14px;margin-right: 10px;font-size: 16px}
+
+                /* 第二層============================================================ */
+                .second_bar_background{width: 100%;height: 280px;display: flex;align-items: center;justify-content: center;margin: 0px;margin-bottom: 55px;
+                background-image:url("../static/CKS_Memory_Hall.png"),linear-gradient(135deg, #AADDEE 0%, #66AABB 100%);
+                background-repeat: no-repeat;background-position:bottom 0px right 0px, 0px;
+                background-size: 276px 148px,100% 320px;}
+                .three_items_in_one_div{width: 340px;height: 169px;align-items: flex-start;margin-left: auto;margin-right: auto;}
+                /* 輕鬆享受台北一日悠閒 */
+                .easy_enjoy{width: 320px;height: 41px;color: white;font-weight: bold;font-weight: 700;font-size: 28px;text-align: left;line-height: 24px;margin-left: 20px;}
+                /* 探索每個角落，體驗城市的深度旅遊行程 */
+                .explore_every_corner{width: 320px;height: 22px;color: white;text-align: left;font-weight: 400;font-size: 16px;line-height: 13.3px;margin-left: 20px;}
+                /* 輸入景點名稱查詢 */
+                .insert_and_btn{width: 290px;height: 46px;display: flex;margin-top: 25px;margin-left: 20px;}
+                .search_tourist_name{width: 230px;height: 46px;margin: 0px;box-sizing: border-box;border: 0px;
+                    border-top-left-radius: 9px;border-bottom-left-radius: 9px;}
+                .btn{width: 60px;height: 46px;margin: 0px;padding-left: 15px;background-color: #448899;box-sizing: border-box;border: 0px;
+                    border-top-right-radius: 15%;border-bottom-right-radius: 15%;}
+                ::placeholder { color: #757575;}
+
+                /* 第三層============================================================ */
+                .newdiv{width: 100%;}
+                .picline1{width:45%;height:280px;margin-top: 15px;margin-left: 10px;margin-right: 10px;}
+                .first4pics{width: 100%;height: 202px;display: block;box-sizing: border-box;object-fit: cover;} /* 方框裡的照片 */
+                .up_word{width: 100%;height:45px;font-size: 16px;font-weight: 700;line-height: 13.3px;margin: 0px;padding-top: 8px;padding-left: 10px;box-sizing: border-box;}/* 方框裡的上層字 */
+                .down_word_zone{width: 100%;height: 33px;display: flex;margin-top: 0px;box-sizing: border-box;} /* 方框裡的下層字區塊 */
+                .down_word_left{width: 50%;height: 20px;line-height:20px;margin-left: 10px;margin-bottom: 13px;font-size: 16px;text-align: left;box-sizing: border-box;}/* 方框裡的下層字區塊左 */
+                .down_word_right{width: 50%;height: 20px;line-height:20px;margin-left:auto;margin-right: 10px;margin-bottom: 13px;font-size: 16px;text-align: right;box-sizing: border-box;}/* 方框裡的下層字區塊右 */
+            }
+            @media (max-width:600px){
+                /* 頂層============================================================ */
+                .navigation_bar{width:100%;height: 54px;}
+                .taipei_oneday_tourist{width: 150px; height: 34px;font-size: 30px;}
+                .item1{width: 64px;height: 14px;margin-right: 15px;padding: 10px;font-size: 16px}
+                .item2{width: 71px;height: 14px;margin-right: 10px;font-size: 16px}
+
+                /* 第二層============================================================ */
+                .second_bar_background{width: 100%;height: 280px;display: flex;align-items: center;justify-content: center;margin: 0px;margin-bottom: 55px;
+                background-image:url("../static/CKS_Memory_Hall.png"),linear-gradient(135deg, #AADDEE 0%, #66AABB 100%);
+                background-repeat: no-repeat;background-position:bottom 0px right -64px, 0px;
+                background-size: 276px 148px,100% 320px;}
+                .three_items_in_one_div{width: 340px;height: 169px;align-items: flex-start;margin-left: auto;margin-right: auto;}
+                /* 輕鬆享受台北一日悠閒 */
+                .easy_enjoy{width: 320px;height: 41px;color: white;font-weight: bold;font-weight: 700;font-size: 28px;text-align: left;line-height: 24px;margin-left: 20px;}
+                /* 探索每個角落，體驗城市的深度旅遊行程 */
+                .explore_every_corner{width: 320px;height: 22px;color: white;text-align: left;font-weight: 400;font-size: 16px;line-height: 13.3px;margin-left: 20px;}
+                /* 輸入景點名稱查詢 */
+                .insert_and_btn{width: 290px;height: 46px;display: flex;margin-top: 25px;margin-left: 20px;}
+                .search_tourist_name{width: 230px;height: 46px;margin: 0px;box-sizing: border-box;border: 0px;
+                    border-top-left-radius: 9px;border-bottom-left-radius: 9px;}
+                .btn{width: 60px;height: 46px;margin: 0px;padding-left: 15px;background-color: #448899;box-sizing: border-box;border: 0px;
+                    border-top-right-radius: 15%;border-bottom-right-radius: 15%;}
+                ::placeholder { color: #757575;}
+
+                /* 第三層============================================================ */
+                .picline1{width:85%;height:280px;margin-top: 15px;margin-left: 20px;margin-right: 18px;}
+                .first4pics{height: 202px;display: block;box-sizing: border-box;} /* 方框裡的照片 */
+                .up_word{width: 100%;height:45px;font-size: 16px;font-weight: 700;line-height: 13.3px;margin: 0px;padding-top: 8px;padding-left: 10px;box-sizing: border-box;}/* 方框裡的上層字 */
+                .down_word_zone{width: 100%;height: 33px;display: flex;margin-top: 0px;box-sizing: border-box;} /* 方框裡的下層字區塊 */
+                .down_word_left{width: 125px;height: 20px;line-height:20px;margin-left: 10px;margin-bottom: 13px;font-size: 16px;text-align: left;}/* 方框裡的下層字區塊左 */
+                .down_word_right{width: 125px;height: 20px;line-height:20px;margin-left:auto;margin-right: 10px;margin-bottom: 13px;font-size: 16px;text-align: right;}/* 方框裡的下層字區塊右 */
+
+                /* 登入彈出視窗 */
+                
+            }
+
+            
+        </style>
+    </head>
+    <body style="margin: 0px;" onload="init();getData()" id="body">
+        <div class="empty_fixed_bar">
+            <div class="navigation_bar">
+                <div class="taipei_oneday_tourist" onclick="location.href='/'">台北一日遊</div>
+                <span class="item1" id="item1" onclick="booking_btn()">預定行程</span>
+                <span class="item2" id="item2">
+                    <span onclick="show_login_area()">登入</span>/<span onclick="show_signup_area()">註冊</span>
+                </span>
+                <span class="logout" id="logout" onclick="logout()">登出系統</span>
+            </div> 
+        </div>  
+        <div class="empty_bar"></div>
+        <!-- 第二層 -->
+        <div class="second_bar_background">
+            <div class="three_items_in_one_div">
+                <div class="easy_enjoy">輕鬆享受台北一日悠閒</div>
+                <div class="explore_every_corner">探索每個角落，體驗城市的深度旅遊行程</div>
+                <div class="insert_and_btn">
+                    <input class="search_tourist_name" id="search_tourist_name" placeholder="輸入景點名稱查詢">
+                    </input>
+                    <button class="btn" onclick="btn()">
+                        <img src="../static/icon_search.png" style="cursor:pointer;"/>
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 第三層 -->
+        <div class="newdiv" id="newdiv">
+            <!-- 載入效果 -->
+            <div class="loading_wrapper">
+                <div style="color: #61bfd6" class="loading la-ball-newton-cradle la-3x">
+                    <div></div>
+                    <div></div>
+                    <div></div>
+                    <div></div>
+                </div>
+            </div>
+        </div>
+        <!-- footer -->
+        <div class="copyright">
+            COPYRIGHT © 2021 台北一日遊
+        </div>
+    <!-- 登入彈出視窗 -->
+    <div class="overlay_login" id="overlay_login">
+        <div class="login_block" id="login_block">
+            <div class="login_top"></div>
+            <div class="login_title_area">
+                <div class="login_title">登入會員帳號</div>
+                <img class="icon_close" src="../static/icon_close.png" onclick="close_login()">
+            </div>
+            <input class="type_email" id="email_login" type="email" placeholder="輸入電子信箱">
+            <div id="email_login_error_message">錯誤訊息</div>
+            <input class="type_password" id="password_login" type="password" placeholder="輸入密碼">
+            <div class="login_btn" onclick="login()">登入帳戶</div>
+
+            <div id="login_failed" style="display:none"></div>
+
+            <div class="not_yet_account" onclick="signup_after_popup()">還沒有帳戶？點此註冊</div>
+        </div>
+    </div>
+    <!-- 註冊彈出視窗 -->
+    <div class="overlay_signup" id="overlay_signup">
+        <div class="signup_block" id="signup_block">
+            <div class="signup_top"></div>
+            <div class="signup_title_area">
+                <div class="signup_title">註冊會員帳號</div>
+                <img class="icon_close" src="../static/icon_close.png" onclick="close_signup()">
+            </div>
+            <input class="signup_type_name" type="text" id="name_signup" placeholder="輸入姓名">
+            <!-- <i class="fas fa-band-aid" id="name_signup_check"></i><i class="fas fa-check-circle"></i> -->
+            <div id="name_signup_error_message">錯誤訊息</div>
+            <input class="signup_type_email" type="email" id="email_signup" placeholder="輸入電子信箱">
+            <div id="email_signup_error_message">錯誤訊息</div>
+            <input class="signup_type_password" type="password" id="password_signup" placeholder="輸入密碼">
+            <div id="password_signup_error_message">錯誤訊息</div>
+            <div class="signup_btn" onclick="signup()">註冊新帳戶</div>
+
+            <div id="signup_failed" style="display:none">Email 已經註冊帳戶</div>
+            <div id="signup_succeed" style="display:none">註冊成功</div>
+            
+            <div class="yet_account" onclick = "login_after_popup()">已經有帳戶了？點此登入</div>
+        </div>
+    </div>
+    <script type="text/javascript">
+        // 登入會員驗證
+        // let email_login=document.getElementById("email_login")
+        // email_login.addEventListener("keyup", (e) =>{
+        //     let input=e.target.value;
+        //     let email_login_error_message=document.getElementById("email_login_error_message");
+        //     if(input.includes("@"&&".")){
+        //         e.target.style="background-color : white";
+        //         email_login_error_message = "display : none";
+        //     }else{
+        //         e.target.style="background-color : rgba(255, 0, 0, 0.6)";
+        //         email_login_error_message.style = "display : inline-block";
+        //         email_login_error_message.textContent = "不符合電子信箱模式";
+        //     }
+        // })
+
+        // 註冊會員驗證
+        // 1. 姓名
+        let name_signup=document.getElementById("name_signup")
+        // let signupPassed={
+        //     name:false,
+        //     username:false,
+        //     password:false,
+        // };
+        // signupUpBtn.disabled=Object.values(signupPassed).includes(false);
+        name_signup.addEventListener("keyup", (e) =>{
+            let input=e.target.value;
+            let name_signup_error_message=document.getElementById("name_signup_error_message");
+            if(input.length<3||input.length>14){
+                e.target.style="background-color : rgba(255, 0, 0, 0.6)";
+                name_signup_error_message.style = "display : inline-block";
+                name_signup_error_message.textContent = "姓名長度需介於 3~14 個字";
+                // signupPassed.name = false;
+                // signUpBtn.disabled = Object.values(signupPassed).includes(false);
+            }
+            else{
+                e.target.style="background-color : white";
+                name_signup_error_message.style = "display : none";
+            }
+        })
+        // 2. 電子信箱
+        let email_signup=document.getElementById("email_signup");
+        email_signup.addEventListener("keyup", (e) =>{
+            let input=e.target.value;
+            let email_signup_error_message=document.getElementById("email_signup_error_message");
+            if(input.includes("@")&&input.includes(".")){
+                e.target.style="background-color : white";
+                email_signup_error_message.style = "display : none";
+            }else{
+                e.target.style="background-color : rgba(255, 0, 0, 0.6)";
+                email_signup_error_message.style = "display : inline-block";
+                email_signup_error_message.textContent = "不符合電子信箱模式";
+            }
+        })
+
+        // 登入會員
+        function login(){
+            if(email_login.value.includes("@"&&".")){
+                let req=new XMLHttpRequest();
+                req.open("PATCH","/api/user");
+                req.setRequestHeader("Content-type", "application/json");
+                req.onload=function(){
+                    // 登入成功
+                    if(JSON.parse(this.responseText)["ok"]==true){
+                        window.location="/";
+                    }
+                    // 密碼錯誤
+                    else if(JSON.parse(this.responseText)["message"]=="密碼錯誤"){
+                        let login_failed=document.getElementById("login_failed");
+                        login_failed.innerHTML="密碼錯誤";
+                        login_failed.style.display="block";
+                    }
+                    // 此Email 未註冊帳號
+                    else if(JSON.parse(this.responseText)["message"]=="此Email 未註冊帳號"){
+                        let login_failed=document.getElementById("login_failed");
+                        login_failed.innerHTML="此Email 未註冊帳號";
+                        login_failed.style.display="block";
+                    }
+                }
+                let email_login=document.getElementById("email_login");
+                let password_login=document.getElementById("password_login");
+                req.send(
+                    JSON.stringify({
+                        "email_login":email_login.value,
+                        "password_login":password_login.value
+                    })
+                );
+            }
+        }
+
+        // 註冊會員
+        function signup(){
+            console.log(name_signup.value.length>2&&name_signup.value.length<15&&email_signup.value.includes("@"&&"."))
+            if(name_signup.value.length>2&&name_signup.value.length<15&&email_signup.value.includes("@"&&".")){
+                // console.log(name_signup.value.length>2&&name_signup.value.length<15&&email_signup.value.includes("@"&&"."))
+                let req=new XMLHttpRequest();
+                req.open("POST","/api/user");
+                req.setRequestHeader("Content-type", "application/json");
+                req.onload=function(){
+                    if(JSON.parse(this.responseText)["error"]===true){
+                        console.log(this.responseText);
+                        let signup_succeed=document.getElementById("signup_succeed");
+                        signup_succeed.style.display="none";
+                        let signup_failed=document.getElementById("signup_failed");
+                        signup_failed.style.display="block";
+                    }else if(JSON.parse(this.responseText)["ok"]===true){
+                        console.log(this.responseText);
+                        let signup_failed=document.getElementById("signup_failed");
+                        signup_failed.style.display="none";
+                        let signup_succeed=document.getElementById("signup_succeed");
+                        signup_succeed.style.display="block";
+                    }
+
+                }
+                let name_signup=document.getElementById("name_signup");
+                let email_signup=document.getElementById("email_signup");
+                let password_signup=document.getElementById("password_signup");
+                req.send(
+                    JSON.stringify({
+                        "name_signup":name_signup.value,
+                        "email_signup":email_signup.value,
+                        "password_signup":password_signup.value
+                    })
+                )
+            }
+        }
+        // function signup(){
+        //     let name_signup=document.getElementById("name_signup");
+        //     let email_signup=document.getElementById("email_signup");
+        //     let password_signup=document.getElementById("password_signup");
+        //     let src="http://192.168.0.12:3000/api/user";
+        //     fetch(src,{
+        //         method:"POST",
+        //         body:JSON.stringify({
+        //             "name_signup":name_signup.value,
+        //             "email_signup":email_signup.value,
+        //             "password_signup":password_signup.value
+        //         }),
+        //         headers:new Headers({
+        //             "Content-type":"application/json"
+        //         })
+        //     }).then(async function(response){
+        //         let parseData=response.json()
+        //         console.log(parseData)
+        //         if(parseData.ok===true){
+        //             console.log(parseData.ok)
+        //             let signup_succeed=document.getElementById("signup_succeed");
+        //             signup_succeed.style.display="block";
+        //         }else if(parseData.message==="Email 已經被註冊"){
+        //             console.log(parseData["message"])
+        //             let signup_failed=document.getElementById("signup_failed");
+        //             signup_failed.style.display="block";
+        //         }
+        //     })
+        // }
+
+        // 登出會員
+        function logout(){
+            let req=new XMLHttpRequest();
+            req.open("DELETE","/api/user")
+            req.onload=function(){
+                window.location="/";
+                // let item2=document.getElementById("item2");
+                // item2.style.display="block";
+                // let logout=document.getElementById("logout");
+                // logout.style.display="none";
+            }
+            req.send();
+        }
+    
+        // 輸入景點名稱可按 Enter 
+        let search_tourist_name=document.getElementById("search_tourist_name")
+        search_tourist_name.addEventListener("keydown",function(e){
+            if(e.keyCode === 13){
+                btn();
+            }
+        });
+    </script>
+
+    </body>
+</html>
