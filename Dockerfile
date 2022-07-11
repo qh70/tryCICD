@@ -4,7 +4,7 @@ WORKDIR /stock-strategies
 
 ADD . /stock-strategies
 
-RUN pip install -r requirements.txt
+RUN pip install flask
 RUN pip install python-dotenv
 
 CMD ["python", "app.py"]
